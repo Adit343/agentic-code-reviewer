@@ -1,21 +1,23 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { GitBranch, Code2, FolderGit2, Globe, Shield, Loader2, Play, Sparkles, FolderOpen } from 'lucide-react';
+import { GitBranch, Code2, FolderGit2, Globe, Shield, Loader2, Play, Sparkles, FolderOpen, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 
 export function NewReviewModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const router = useRouter();
   const [provider, setProvider] = useState<'github' | 'gitlab' | 'url' | 'local'>('local');
-  const [source, setSource] = useState('/home/adit/Desktop/Learning/agentic-code-reviewer');
+  const [source, setSource] = useState('.');
   const [commitSha, setCommitSha] = useState('');
   const [branch, setBranch] = useState('main');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      setValidationError(null);
     } else {
       document.body.style.overflow = '';
     }
@@ -29,38 +31,45 @@ export function NewReviewModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsSubmitting(true);
+    setValidationError(null);
 
     try {
       const res = await fetch('/api/reviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          repositorySource: source,
+          repositorySource: source.trim(),
           provider,
-          commitSha: commitSha || undefined,
-          branch: branch || undefined,
+          commitSha: commitSha.trim() || undefined,
+          branch: branch.trim() || undefined,
         }),
       });
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to trigger review job');
+        const errorMsg = data.error || 'Failed to trigger review job. Please check the repository path or URL.';
+        setValidationError(errorMsg);
+        toast.error(errorMsg);
+        return;
       }
 
       toast.success('Audit pipeline initiated successfully!');
       onClose();
       router.push(`/reviews/${data.id}`);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to initiate review');
+      const msg = err.message || 'Failed to initiate review. Please check the path and try again.';
+      setValidationError(msg);
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }
   }
 
   const setPreset = (type: 'current' | 'express' | 'react') => {
+    setValidationError(null);
     if (type === 'current') {
       setProvider('local');
-      setSource('/home/adit/Desktop/Learning/agentic-code-reviewer');
+      setSource('.');
     } else if (type === 'express') {
       setProvider('github');
       setSource('expressjs/express');
@@ -153,7 +162,10 @@ export function NewReviewModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
                   <button
                     key={item.id}
                     type="button"
-                    onClick={() => setProvider(item.id as any)}
+                    onClick={() => {
+                      setProvider(item.id as any);
+                      setValidationError(null);
+                    }}
                     className={`flex flex-col items-center justify-center gap-2 rounded-2xl border p-3.5 text-xs font-bold transition-all cursor-pointer ${
                       isSelected
                         ? 'border-indigo-500 bg-gradient-to-b from-indigo-500/20 to-indigo-600/10 text-white shadow-lg shadow-indigo-500/20'
@@ -171,21 +183,28 @@ export function NewReviewModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
           {/* Input Source */}
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
-              {provider === 'local' ? 'Absolute Local Repository Path' : 'Repository URL or Name (owner/repo)'}
+              {provider === 'local' ? 'Local Repository Path (e.g. . or absolute folder path)' : 'Repository URL or Name (owner/repo)'}
             </label>
             <input
               type="text"
               required
               value={source}
-              onChange={(e) => setSource(e.target.value)}
+              onChange={(e) => {
+                setSource(e.target.value);
+                if (validationError) setValidationError(null);
+              }}
               placeholder={
                 provider === 'local'
-                  ? '/path/to/local/repository'
+                  ? '. (current project) or C:\\path\\to\\project'
                   : provider === 'github'
                   ? 'org/repo or https://github.com/org/repo'
                   : 'https://gitlab.com/org/repo'
               }
-              className="w-full rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white placeholder-slate-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
+              className={`w-full rounded-2xl border bg-slate-950 px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-1 transition-all font-mono ${
+                validationError
+                  ? 'border-rose-500/80 focus:border-rose-500 focus:ring-rose-500'
+                  : 'border-slate-800 focus:border-indigo-500 focus:ring-indigo-500'
+              }`}
             />
           </div>
 
@@ -216,6 +235,20 @@ export function NewReviewModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
               />
             </div>
           </div>
+
+          {/* Friendly Validation Error Display */}
+          {validationError && (
+            <div className="flex items-start gap-3 rounded-2xl border border-rose-500/40 bg-rose-950/40 p-4 text-xs text-rose-200 shadow-xl backdrop-blur-md animate-in fade-in slide-in-from-top-1">
+              <AlertCircle className="h-5 w-5 text-rose-400 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="font-bold text-rose-300">Invalid Repository or Path</p>
+                <p className="text-slate-200 leading-relaxed font-sans">{validationError}</p>
+                <p className="text-[11px] text-rose-300/80 font-mono mt-1">
+                  Tip: For local repos, use &quot;.&quot; for the current workspace or an existing directory path. For GitHub/GitLab, use &quot;owner/repo&quot; format and ensure the repository is public.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Footer Actions */}
           <div className="flex items-center justify-end gap-3 pt-5 border-t border-slate-800/80">

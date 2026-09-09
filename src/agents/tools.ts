@@ -2,12 +2,23 @@ import fs from 'fs/promises';
 import path from 'path';
 import { buildCodeIndex, searchCode } from '@/services/intelligence/codeIndex';
 import { computeGitDiff } from '@/services/repository/diff';
-import { Finding } from '@/types/domain';
+import { Finding, CodeIndex } from '@/types/domain';
 
 export class AgentToolSet {
-  constructor(private workspacePath: string, private staticFindings: Finding[], private dependencyFindings: Finding[]) {}
+  private fileCache = new Map<string, string[]>();
+
+  constructor(
+    private workspacePath: string,
+    private staticFindings: Finding[],
+    private dependencyFindings: Finding[],
+    private codeIndex?: CodeIndex
+  ) {}
 
   async listFiles(subPath: string = '.', depth: number = 3): Promise<string[]> {
+    if (this.codeIndex && subPath === '.') {
+      return this.codeIndex.files;
+    }
+
     const targetDir = path.resolve(this.workspacePath, subPath);
     if (!targetDir.startsWith(this.workspacePath)) {
       throw new Error('Access denied: Path outside workspace boundary');
@@ -47,8 +58,12 @@ export class AgentToolSet {
     }
 
     try {
-      const raw = await fs.readFile(targetPath, 'utf-8');
-      const lines = raw.split('\n');
+      let lines = this.fileCache.get(targetPath);
+      if (!lines) {
+        const raw = await fs.readFile(targetPath, 'utf-8');
+        lines = raw.split('\n');
+        this.fileCache.set(targetPath, lines);
+      }
       const totalLines = lines.length;
       const sliced = lines.slice(Math.max(0, startLine - 1), Math.min(totalLines, endLine));
       return {
@@ -65,7 +80,7 @@ export class AgentToolSet {
   }
 
   async findReferences(symbolName: string) {
-    const index = await buildCodeIndex(this.workspacePath);
+    const index = this.codeIndex || (await buildCodeIndex(this.workspacePath));
     const references = index.symbols.filter((s) => s.name === symbolName);
     const codeMatches = await searchCode(this.workspacePath, symbolName);
     return {
@@ -75,12 +90,12 @@ export class AgentToolSet {
   }
 
   async getFileSymbols(filePath: string) {
-    const index = await buildCodeIndex(this.workspacePath);
+    const index = this.codeIndex || (await buildCodeIndex(this.workspacePath));
     return index.symbols.filter((s) => s.file === filePath);
   }
 
   async getImportGraph(filePath: string) {
-    const index = await buildCodeIndex(this.workspacePath);
+    const index = this.codeIndex || (await buildCodeIndex(this.workspacePath));
     return index.imports.filter((i) => i.sourceFile === filePath);
   }
 

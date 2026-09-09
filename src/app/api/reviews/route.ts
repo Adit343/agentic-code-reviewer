@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { CreateReviewSchema, Review } from '@/types/domain';
 import { storage } from '@/lib/storage';
 import { executeReviewPipeline } from '@/agents/graph';
+import { validateRepositoryExistence } from '@/services/repository/acquisition';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function GET() {
@@ -13,6 +14,15 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const validated = CreateReviewSchema.parse(body);
+
+    // Validate repository existence upfront with user-friendly error message
+    const validation = await validateRepositoryExistence(validated.repositorySource, validated.provider);
+    if (!validation.valid) {
+      return NextResponse.json(
+        { error: validation.error || 'The repository path or URL could not be verified. Please check and try again.' },
+        { status: 400 }
+      );
+    }
 
     const reviewId = `rev-${uuidv4().slice(0, 8)}`;
     const now = new Date().toISOString();

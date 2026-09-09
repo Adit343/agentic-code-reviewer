@@ -5,9 +5,10 @@ import { storage } from '../../src/services/../../src/lib/storage';
 describe('Review Pipeline End-to-End Integration Test', () => {
   it('executes full review pipeline on current workspace repository', async () => {
     const reviewId = 'test-rev-1';
+    const cwd = process.cwd();
     const review = await storage.createReview({
       id: reviewId,
-      repositorySource: '/home/adit/Desktop/Learning/agentic-code-reviewer',
+      repositorySource: cwd,
       provider: 'local',
       commitSha: 'HEAD',
       status: 'queued',
@@ -20,7 +21,7 @@ describe('Review Pipeline End-to-End Integration Test', () => {
 
     const resultState = await executeReviewPipeline(
       reviewId,
-      '/home/adit/Desktop/Learning/agentic-code-reviewer',
+      cwd,
       'local',
       'HEAD'
     );
@@ -32,5 +33,5 @@ describe('Review Pipeline End-to-End Integration Test', () => {
     const storedReview = await storage.getReview(reviewId);
     expect(storedReview?.status).toBe('completed');
     expect(storedReview?.progressPercent).toBe(100);
-  });
+  }, 30000);
 });

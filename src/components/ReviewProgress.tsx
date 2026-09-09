@@ -13,17 +13,34 @@ export function ReviewProgress({
   status,
   progressPercent,
   currentPhase,
+  error,
 }: {
   status: ReviewStatus;
   progressPercent: number;
   currentPhase: string;
+  error?: string;
 }) {
   const getStepStatus = (stepKey: string) => {
+    if (status === 'failed') {
+      let failedStep = 'acquisiton';
+      if (progressPercent > 80) failedStep = 'completed';
+      else if (progressPercent > 60) failedStep = 'verification';
+      else if (progressPercent > 30) failedStep = 'agent_review';
+      else if (progressPercent > 10) failedStep = 'static_analysis';
+
+      const stepOrder = ['acquisiton', 'static_analysis', 'agent_review', 'verification', 'completed'];
+      const failedIdx = stepOrder.indexOf(failedStep);
+      const currentIdx = stepOrder.indexOf(stepKey);
+
+      if (currentIdx < failedIdx) return 'completed';
+      if (currentIdx === failedIdx) return 'failed';
+      return 'pending';
+    }
+
     const order = ['queued', 'acquisiton', 'static_analysis', 'agent_review', 'verification', 'completed'];
     const currentIndex = order.indexOf(status);
     const stepIndex = order.indexOf(stepKey);
 
-    if (status === 'failed') return 'failed';
     if (currentIndex > stepIndex || status === 'completed') return 'completed';
     if (currentIndex === stepIndex) return 'in_progress';
     return 'pending';
@@ -44,8 +61,14 @@ export function ReviewProgress({
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="text-xs font-extrabold text-indigo-300 bg-indigo-500/10 px-3.5 py-1.5 rounded-full border border-indigo-500/30 shadow-inner">
-            {progressPercent}% COMPLETE
+          <span
+            className={`text-xs font-extrabold px-3.5 py-1.5 rounded-full border shadow-inner ${
+              status === 'failed'
+                ? 'text-rose-300 bg-rose-500/10 border-rose-500/30'
+                : 'text-indigo-300 bg-indigo-500/10 border-indigo-500/30'
+            }`}
+          >
+            {status === 'failed' ? 'FAILED' : `${progressPercent}% COMPLETE`}
           </span>
         </div>
       </div>
@@ -53,8 +76,12 @@ export function ReviewProgress({
       {/* Progress Bar Container */}
       <div className="relative w-full h-3 bg-slate-950 rounded-full overflow-hidden mb-6 border border-slate-800/80 p-0.5">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 transition-all duration-700 ease-out shadow-lg shadow-indigo-500/20"
-          style={{ width: `${progressPercent}%` }}
+          className={`h-full rounded-full transition-all duration-700 ease-out shadow-lg ${
+            status === 'failed'
+              ? 'bg-rose-500 shadow-rose-500/20'
+              : 'bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 shadow-indigo-500/20'
+          }`}
+          style={{ width: `${Math.max(5, progressPercent)}%` }}
         />
       </div>
 
@@ -71,7 +98,7 @@ export function ReviewProgress({
                   : stepStatus === 'in_progress'
                   ? 'border-indigo-500/60 bg-gradient-to-b from-indigo-500/15 to-purple-500/10 text-white shadow-xl shadow-indigo-500/10 scale-[1.02]'
                   : stepStatus === 'failed'
-                  ? 'border-rose-500/30 bg-rose-500/10 text-rose-400'
+                  ? 'border-rose-500/50 bg-rose-500/15 text-rose-300 shadow-lg shadow-rose-500/10'
                   : 'border-slate-800/80 bg-slate-950/40 text-slate-500'
               }`}
             >
@@ -90,6 +117,17 @@ export function ReviewProgress({
           );
         })}
       </div>
+
+      {/* Inline Failure Callout */}
+      {status === 'failed' && error && (
+        <div className="mt-5 flex items-start gap-3 rounded-2xl border border-rose-500/40 bg-rose-950/30 p-4 text-xs text-rose-200 backdrop-blur-md animate-in fade-in">
+          <AlertCircle className="h-5 w-5 text-rose-400 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="font-bold text-rose-300">Execution Error</p>
+            <p className="text-slate-200 font-sans leading-relaxed">{error}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

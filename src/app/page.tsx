@@ -250,7 +250,14 @@ export default function DashboardPage() {
                           SHA: {rev.commitSha.slice(0, 7)}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-400 font-mono">{rev.currentPhase}</p>
+                      {rev.status === 'failed' && rev.error ? (
+                        <p className="text-xs text-rose-300 font-medium flex items-center gap-1.5 line-clamp-1">
+                          <ShieldAlert className="h-3.5 w-3.5 shrink-0 text-rose-400" />
+                          <span>{rev.error}</span>
+                        </p>
+                      ) : (
+                        <p className="text-xs text-slate-400 font-mono">{rev.currentPhase}</p>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-4">

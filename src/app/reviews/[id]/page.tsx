@@ -94,7 +94,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
       if (currentStatus && currentStatus !== 'completed' && currentStatus !== 'failed') {
         fetchReviewData();
       }
-    }, 2500);
+    }, 1000);
 
     return () => clearInterval(interval);
   }, [reviewId]);
@@ -217,9 +217,49 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
             status={review.status}
             progressPercent={review.progressPercent}
             currentPhase={review.currentPhase}
+            error={review.error}
           />
         ) : (
           <div className="rounded-3xl border border-slate-800/80 bg-slate-900/40 p-6 h-32 animate-pulse" />
+        )}
+
+        {/* Failed Review Friendly Alert Card */}
+        {review?.status === 'failed' && (
+          <div className="relative overflow-hidden rounded-3xl border border-rose-500/40 bg-gradient-to-br from-rose-950/60 via-slate-900/90 to-rose-950/30 p-6 md:p-8 backdrop-blur-2xl shadow-2xl animate-in fade-in">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/40 shadow-inner">
+                  <AlertTriangle className="h-6 w-6" />
+                </div>
+                <div className="space-y-1.5">
+                  <h3 className="text-lg font-extrabold text-white flex items-center gap-2">
+                    Review Pipeline Failed
+                  </h3>
+                  <p className="text-sm text-rose-200 font-medium leading-relaxed">
+                    {review.error || 'The review could not complete because the repository could not be acquired or accessed.'}
+                  </p>
+                  <div className="mt-3 rounded-xl bg-slate-950/60 border border-slate-800/80 p-3.5 text-xs text-slate-300 font-sans space-y-1.5">
+                    <span className="font-bold text-slate-200 block">How to resolve this:</span>
+                    <ul className="list-disc list-inside space-y-1 text-slate-400">
+                      <li>For <strong className="text-slate-300">Local Repositories</strong>: Ensure the directory exists on disk, is a directory, and has read permissions. Use <code className="text-indigo-300 font-mono">.</code> for the current project.</li>
+                      <li>For <strong className="text-slate-300">GitHub / GitLab</strong>: Verify <code className="text-indigo-300 font-mono">owner/repo</code>, check for typos, and confirm the repository is public.</li>
+                      <li>For <strong className="text-slate-300">Git URLs</strong>: Verify the HTTPS clone URL and check that the server is reachable.</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 shrink-0">
+                <Link
+                  href="/"
+                  className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 px-5 py-3 text-xs font-bold text-white shadow-xl shadow-indigo-600/30 hover:from-indigo-500 hover:to-purple-500 transition-all cursor-pointer"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Try Another Repository
+                </Link>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Summary Cards Grid */}

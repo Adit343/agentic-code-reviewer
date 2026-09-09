@@ -50,17 +50,18 @@ export async function executeReviewPipeline(
       parentSha: acqResult.parentSha,
     });
 
-    const codeIndex = await buildCodeIndex(workspace.path);
-
-    // Step 6: Run Deterministic Analyzers
-    const staticFindings = await runSemgrepAnalyzer(workspace.path);
-    const qualityFindings = await runQualityAnalyzer(workspace.path);
-    const dependencyFindings = await runDependencyAnalyzer(workspace.path);
+    // Step 5 & 6: Run Code Intelligence Indexing and Deterministic Analyzers concurrently
+    const [codeIndex, staticFindings, qualityFindings, dependencyFindings] = await Promise.all([
+      buildCodeIndex(workspace.path),
+      runSemgrepAnalyzer(workspace.path),
+      runQualityAnalyzer(workspace.path),
+      runDependencyAnalyzer(workspace.path),
+    ]);
 
     const allStatic = [...staticFindings, ...qualityFindings];
 
-    // Tool set for agents
-    const tools = new AgentToolSet(workspace.path, allStatic, dependencyFindings);
+    // Tool set for agents (reusing precomputed codeIndex for 0ms symbol/import lookups)
+    const tools = new AgentToolSet(workspace.path, allStatic, dependencyFindings, codeIndex);
 
     let state: ReviewState = {
       reviewId,
@@ -87,17 +88,19 @@ export async function executeReviewPipeline(
       },
     };
 
-    // Step 7: Run Specialized Agents
+    // Step 7: Run Specialized Agents in parallel
     await storage.updateReview(reviewId, {
       status: 'agent_review',
       progressPercent: 60,
       currentPhase: 'Running Security, Bug, Quality & Dependency AI agents...',
     });
 
-    const secCandidates = await runSecurityAgent(state, tools);
-    const bugCandidates = await runBugAgent(state, tools);
-    const qualCandidates = await runQualityAgent(state, tools);
-    const depCandidates = await runDependencyAgent(state, tools);
+    const [secCandidates, bugCandidates, qualCandidates, depCandidates] = await Promise.all([
+      runSecurityAgent(state, tools),
+      runBugAgent(state, tools),
+      runQualityAgent(state, tools),
+      runDependencyAgent(state, tools),
+    ]);
 
     const rawCandidates = [...secCandidates, ...bugCandidates, ...qualCandidates, ...depCandidates];
 
@@ -143,10 +146,11 @@ export async function executeReviewPipeline(
 
     return state;
   } catch (err: any) {
+    const existing = await storage.getReview(reviewId);
     await storage.updateReview(reviewId, {
       status: 'failed',
-      progressPercent: 100,
-      currentPhase: 'Review pipeline failed.',
+      progressPercent: existing?.progressPercent || 10,
+      currentPhase: `Failed: ${err.message}`,
       error: err.message,
     });
     throw err;

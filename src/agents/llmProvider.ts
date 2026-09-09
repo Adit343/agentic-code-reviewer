@@ -108,37 +108,50 @@ export async function runDependencyAgent(state: ReviewState, tools: AgentToolSet
   return [...state.dependencyFindings];
 }
 
-export async function runVerificationAgent(candidates: Finding[], tools: AgentToolSet): Promise<{ verified: Finding[]; rejected: Finding[] }> {
+export async function runVerificationAgent(
+  candidates: Finding[],
+  tools: AgentToolSet
+): Promise<{ verified: Finding[]; rejected: Finding[] }> {
   const verified: Finding[] = [];
   const rejected: Finding[] = [];
 
-  for (const finding of candidates) {
-    // Counter-evidence step: inspect if sanitization/validation/authorization exists nearby
-    const fileData = await tools.readFile(finding.file, Math.max(1, finding.start_line - 15), finding.end_line + 15);
-    const codeSnippet = fileData.content.toLowerCase();
+  const results = await Promise.all(
+    candidates.map(async (finding) => {
+      // Counter-evidence step: inspect if sanitization/validation/authorization exists nearby
+      const fileData = await tools.readFile(finding.file, Math.max(1, finding.start_line - 15), finding.end_line + 15);
+      const codeSnippet = fileData.content.toLowerCase();
 
-    let hasCounterEvidence = false;
-    const counterReasons: string[] = [];
+      let hasCounterEvidence = false;
+      const counterReasons: string[] = [];
 
-    if (finding.rule === 'SQL_INJECTION' && (codeSnippet.includes('prepare(') || codeSnippet.includes('parameter') || codeSnippet.includes('$1'))) {
-      hasCounterEvidence = true;
-      counterReasons.push('Found parameterized query indicator ($1 / prepare) in surrounding context.');
-    }
+      if (finding.rule === 'SQL_INJECTION' && (codeSnippet.includes('prepare(') || codeSnippet.includes('parameter') || codeSnippet.includes('$1'))) {
+        hasCounterEvidence = true;
+        counterReasons.push('Found parameterized query indicator ($1 / prepare) in surrounding context.');
+      }
 
-    if (finding.rule === 'UNSAFE_INNER_HTML' && (codeSnippet.includes('dompurify') || codeSnippet.includes('sanitize'))) {
-      hasCounterEvidence = true;
-      counterReasons.push('Found DOMPurify / sanitize library invocation prior to dangerouslySetInnerHTML.');
-    }
+      if (finding.rule === 'UNSAFE_INNER_HTML' && (codeSnippet.includes('dompurify') || codeSnippet.includes('sanitize'))) {
+        hasCounterEvidence = true;
+        counterReasons.push('Found DOMPurify / sanitize library invocation prior to dangerouslySetInnerHTML.');
+      }
 
-    if (hasCounterEvidence) {
-      finding.status = 'false_positive';
-      finding.confidence = Math.max(0.2, finding.confidence - 0.5);
-      finding.verification.counter_evidence_considered = counterReasons;
-      rejected.push(finding);
+      if (hasCounterEvidence) {
+        finding.status = 'false_positive';
+        finding.confidence = Math.max(0.2, finding.confidence - 0.5);
+        finding.verification.counter_evidence_considered = counterReasons;
+        return { isVerified: false, finding };
+      } else {
+        finding.status = finding.confidence >= 0.85 ? 'confirmed' : 'likely';
+        finding.verification.checks_performed.push('verification_agent_counter_evidence_passed');
+        return { isVerified: true, finding };
+      }
+    })
+  );
+
+  for (const r of results) {
+    if (r.isVerified) {
+      verified.push(r.finding);
     } else {
-      finding.status = finding.confidence >= 0.85 ? 'confirmed' : 'likely';
-      finding.verification.checks_performed.push('verification_agent_counter_evidence_passed');
-      verified.push(finding);
+      rejected.push(r.finding);
     }
   }
 
