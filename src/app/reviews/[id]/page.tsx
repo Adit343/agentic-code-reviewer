@@ -224,29 +224,29 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
 
         {/* Summary Cards Grid */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <div className="rounded-3xl border border-rose-500/30 bg-rose-500/10 p-5 shadow-lg backdrop-blur-xl transform-gpu">
+          <div className="flex flex-col items-center justify-center text-center rounded-3xl border border-rose-500/30 bg-rose-500/10 p-5 shadow-lg backdrop-blur-xl transform-gpu">
             <span className="text-xs font-extrabold uppercase tracking-wider text-rose-400">Critical Risk</span>
             <p className="text-3xl font-extrabold text-white mt-2 font-mono">{review?.summary?.severityCounts.critical ?? 0}</p>
           </div>
 
-          <div className="rounded-3xl border border-orange-500/30 bg-orange-500/10 p-5 shadow-lg backdrop-blur-xl transform-gpu">
+          <div className="flex flex-col items-center justify-center text-center rounded-3xl border border-orange-500/30 bg-orange-500/10 p-5 shadow-lg backdrop-blur-xl transform-gpu">
             <span className="text-xs font-extrabold uppercase tracking-wider text-orange-400">High Risk</span>
             <p className="text-3xl font-extrabold text-white mt-2 font-mono">{review?.summary?.severityCounts.high ?? 0}</p>
           </div>
 
-          <div className="rounded-3xl border border-amber-500/30 bg-amber-500/10 p-5 shadow-lg backdrop-blur-xl transform-gpu">
+          <div className="flex flex-col items-center justify-center text-center rounded-3xl border border-amber-500/30 bg-amber-500/10 p-5 shadow-lg backdrop-blur-xl transform-gpu">
             <span className="text-xs font-extrabold uppercase tracking-wider text-amber-400">Medium Risk</span>
             <p className="text-3xl font-extrabold text-white mt-2 font-mono">{review?.summary?.severityCounts.medium ?? 0}</p>
           </div>
 
-          <div className="rounded-3xl border border-blue-500/30 bg-blue-500/10 p-5 shadow-lg backdrop-blur-xl transform-gpu">
+          <div className="flex flex-col items-center justify-center text-center rounded-3xl border border-blue-500/30 bg-blue-500/10 p-5 shadow-lg backdrop-blur-xl transform-gpu">
             <span className="text-xs font-extrabold uppercase tracking-wider text-blue-400">Low / Quality</span>
             <p className="text-3xl font-extrabold text-white mt-2 font-mono">
               {(review?.summary?.severityCounts.low ?? 0) + (review?.summary?.severityCounts.info ?? 0)}
             </p>
           </div>
 
-          <div className="rounded-3xl border border-indigo-500/30 bg-indigo-500/10 p-5 shadow-lg backdrop-blur-xl transform-gpu">
+          <div className="flex flex-col items-center justify-center text-center rounded-3xl border border-indigo-500/30 bg-indigo-500/10 p-5 shadow-lg backdrop-blur-xl transform-gpu">
             <span className="text-xs font-extrabold uppercase tracking-wider text-indigo-400">Files Affected</span>
             <p className="text-3xl font-extrabold text-white mt-2 font-mono">{review?.summary?.filesAffected ?? 0}</p>
           </div>
