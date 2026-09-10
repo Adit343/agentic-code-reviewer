@@ -3,6 +3,7 @@ import { acquireRepository } from '@/services/repository/acquisition';
 import { createIsolatedWorkspace } from '@/services/repository/workspace';
 import { computeGitDiff } from '@/services/repository/diff';
 import { buildCodeIndex } from '@/services/intelligence/codeIndex';
+import { captureRepoSnapshot } from '@/services/repository/snapshot';
 import { runSemgrepAnalyzer } from '@/services/analyzers/semgrep';
 import { runQualityAnalyzer } from '@/services/analyzers/eslint';
 import { runDependencyAnalyzer } from '@/services/analyzers/dependency';
@@ -57,6 +58,10 @@ export async function executeReviewPipeline(
       runQualityAnalyzer(workspace.path),
       runDependencyAnalyzer(workspace.path),
     ]);
+
+    // Capture repo snapshot for chatbot and optimizer features (BEFORE workspace cleanup)
+    const snapshot = await captureRepoSnapshot(workspace.path, codeIndex.files, reviewId);
+    storage.saveRepoSnapshot(reviewId, snapshot);
 
     const allStatic = [...staticFindings, ...qualityFindings];
 

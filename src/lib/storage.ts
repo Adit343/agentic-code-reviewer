@@ -1,4 +1,6 @@
 import { Review, Finding, ReviewProject, ToolRun, AgentRun } from '@/types/domain';
+import type { RepoSnapshot } from '@/services/repository/snapshot';
+import type { OptimizationReport } from '@/types/domain';
 
 class StorageStore {
   private projects: Map<string, ReviewProject> = new Map();
@@ -6,6 +8,8 @@ class StorageStore {
   private findings: Map<string, Finding[]> = new Map(); // reviewId -> Finding[]
   private toolRuns: Map<string, ToolRun[]> = new Map(); // reviewId -> ToolRun[]
   private agentRuns: Map<string, AgentRun[]> = new Map(); // reviewId -> AgentRun[]
+  private repoSnapshots: Map<string, RepoSnapshot> = new Map();
+  private optimizations: Map<string, OptimizationReport> = new Map();
 
   // Project methods
   async createProject(project: ReviewProject): Promise<ReviewProject> {
@@ -84,6 +88,34 @@ class StorageStore {
 
   async getAgentRuns(reviewId: string): Promise<AgentRun[]> {
     return this.agentRuns.get(reviewId) || [];
+  }
+
+  // Repo Snapshot methods
+  saveRepoSnapshot(reviewId: string, snapshot: RepoSnapshot): void {
+    this.repoSnapshots.set(reviewId, snapshot);
+  }
+
+  getRepoSnapshot(reviewId: string): RepoSnapshot | undefined {
+    return this.repoSnapshots.get(reviewId);
+  }
+
+  // Optimization methods
+  saveOptimization(id: string, report: OptimizationReport): void {
+    this.optimizations.set(id, report);
+  }
+
+  getOptimization(id: string): OptimizationReport | undefined {
+    return this.optimizations.get(id);
+  }
+
+  updateOptimization(id: string, updates: Partial<OptimizationReport>): void {
+    const existing = this.optimizations.get(id);
+    if (existing) this.optimizations.set(id, { ...existing, ...updates });
+  }
+
+  listOptimizations(): OptimizationReport[] {
+    return Array.from(this.optimizations.values())
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 }
 

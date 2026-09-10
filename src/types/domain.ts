@@ -176,3 +176,58 @@ export const FindingZodSchema = z.object({
     tools: z.array(z.string()),
   }),
 });
+
+// ─── Optimization Feature Types ──────────────────────────────────────────────
+export type OptimizationPriority = 'quick-win' | 'medium-effort' | 'refactor';
+export type OptimizationCategory =
+  | 'readability' | 'performance' | 'design-pattern'
+  | 'error-handling' | 'type-safety' | 'dead-code'
+  | 'naming' | 'complexity' | 'security-hardening';
+
+export interface OptimizationSuggestion {
+  id: string;
+  file: string;
+  start_line: number;
+  end_line: number;
+  category: OptimizationCategory;
+  priority: OptimizationPriority;
+  title: string;
+  explanation: string;
+  improvement: string;
+  before_code?: string;
+  after_code?: string;
+  estimated_impact: string;
+}
+
+export interface OptimizationReport {
+  id: string;
+  repositorySource: string;
+  provider: 'github' | 'gitlab' | 'url' | 'local';
+  analyzedFiles: string[];
+  totalFilesInRepo: number;
+  suggestions: OptimizationSuggestion[];
+  summary: {
+    quickWins: number;
+    mediumEffort: number;
+    refactors: number;
+    totalSuggestions: number;
+    categoryCounts: Partial<Record<OptimizationCategory, number>>;
+    overallScore: number; // 0–100, higher = cleaner code
+  };
+  status: 'pending' | 'acquiring' | 'analyzing' | 'completed' | 'failed';
+  error?: string;
+  createdAt: string;
+  completedAt?: string;
+}
+
+export interface FileTreeNode {
+  name: string;
+  path: string;
+  type: 'file' | 'directory';
+  language?: string;
+  lineCount?: number;
+  sizeBytes?: number;
+  hasFindings?: boolean;
+  children?: FileTreeNode[];
+}
+

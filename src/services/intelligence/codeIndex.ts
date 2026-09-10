@@ -2,7 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { CodeIndex, CodeSymbol, ImportRelation } from '@/types/domain';
 
-const EXCLUDED_DIRS = new Set([
+const DEFAULT_EXCLUDED_PATTERNS = [
   'node_modules',
   '.git',
   '.next',
@@ -12,6 +12,18 @@ const EXCLUDED_DIRS = new Set([
   '.venv',
   'vendor',
   '__pycache__',
+  'package-lock.json',
+  'yarn.lock',
+  'pnpm-lock.yaml',
+];
+
+const BINARY_EXTENSIONS = new Set([
+  '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico', '.svg',
+  '.woff', '.woff2', '.ttf', '.eot', '.otf',
+  '.mp4', '.webm', '.mp3', '.wav', '.ogg',
+  '.pdf', '.zip', '.tar', '.gz', '.7z', '.rar',
+  '.exe', '.dll', '.so', '.dylib', '.bin', '.class', '.pyc', '.o', '.obj',
+  '.lock', '.wasm', '.sqlite', '.db', '.ds_store', '.sys', '.iso',
 ]);
 
 const LANGUAGE_EXTENSIONS: Record<string, string> = {
@@ -19,21 +31,92 @@ const LANGUAGE_EXTENSIONS: Record<string, string> = {
   '.tsx': 'TypeScript (React)',
   '.js': 'JavaScript',
   '.jsx': 'JavaScript (React)',
+  '.mjs': 'JavaScript',
+  '.cjs': 'JavaScript',
   '.py': 'Python',
   '.go': 'Go',
   '.java': 'Java',
+  '.rb': 'Ruby',
   '.rs': 'Rust',
   '.c': 'C',
   '.cpp': 'C++',
+  '.h': 'C/C++ Header',
+  '.hpp': 'C++ Header',
+  '.cs': 'C#',
+  '.php': 'PHP',
+  '.vue': 'Vue',
+  '.svelte': 'Svelte',
+  '.html': 'HTML',
+  '.css': 'CSS',
+  '.scss': 'SCSS',
+  '.sass': 'Sass',
   '.json': 'JSON',
   '.yaml': 'YAML',
   '.yml': 'YAML',
+  '.toml': 'TOML',
   '.md': 'Markdown',
+  '.sql': 'SQL',
+  '.graphql': 'GraphQL',
+  '.gql': 'GraphQL',
+  '.prisma': 'Prisma',
+  '.swift': 'Swift',
+  '.kt': 'Kotlin',
+  '.dart': 'Dart',
+  '.sh': 'Shell',
+  '.bash': 'Shell',
 };
+
+export async function loadGitignorePatterns(workspacePath: string): Promise<string[]> {
+  const patterns = [...DEFAULT_EXCLUDED_PATTERNS];
+  try {
+    const gitignorePath = path.join(workspacePath, '.gitignore');
+    const content = await fs.readFile(gitignorePath, 'utf-8');
+    const lines = content
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line && !line.startsWith('#'));
+    patterns.push(...lines);
+  } catch {
+    // Ignore missing .gitignore
+  }
+  return patterns;
+}
+
+export function isIgnoredPath(relPath: string, patterns: string[]): boolean {
+  const normalized = relPath.replace(/\\/g, '/');
+  const parts = normalized.split('/');
+  const basename = parts[parts.length - 1];
+
+  for (let pattern of patterns) {
+    pattern = pattern.trim();
+    if (!pattern || pattern.startsWith('#')) continue;
+
+    if (pattern.endsWith('/')) pattern = pattern.slice(0, -1);
+
+    if (pattern.startsWith('/')) {
+      const match = pattern.slice(1);
+      if (normalized === match || normalized.startsWith(match + '/')) return true;
+      continue;
+    }
+
+    if (pattern.startsWith('*.')) {
+      const ext = pattern.slice(1);
+      if (normalized.endsWith(ext) || basename.endsWith(ext)) return true;
+      continue;
+    }
+
+    if (parts.includes(pattern) || normalized === pattern || basename === pattern) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 export async function buildCodeIndex(workspacePath: string): Promise<CodeIndex> {
   const files: string[] = [];
   const languages: Record<string, number> = {};
+  const gitignorePatterns = await loadGitignorePatterns(workspacePath);
 
   async function walkDir(currentPath: string, relativePrefix: string = '') {
     let entries;
@@ -44,16 +127,18 @@ export async function buildCodeIndex(workspacePath: string): Promise<CodeIndex> 
     }
 
     for (const entry of entries) {
-      if (EXCLUDED_DIRS.has(entry.name)) continue;
-
       const relPath = relativePrefix ? `${relativePrefix}/${entry.name}` : entry.name;
+      if (isIgnoredPath(relPath, gitignorePatterns)) continue;
+
       const fullPath = path.join(currentPath, entry.name);
 
       if (entry.isDirectory()) {
         await walkDir(fullPath, relPath);
       } else if (entry.isFile()) {
-        files.push(relPath);
         const ext = path.extname(entry.name).toLowerCase();
+        if (BINARY_EXTENSIONS.has(ext)) continue;
+
+        files.push(relPath);
         const lang = LANGUAGE_EXTENSIONS[ext] || 'Other';
         languages[lang] = (languages[lang] || 0) + 1;
       }
@@ -104,7 +189,6 @@ export function extractJsTsSymbols(relFile: string, content: string): CodeSymbol
     const lineNum = index + 1;
     const isExported = line.includes('export ');
 
-    // Match function definition
     const funcMatch = line.match(/(?:export\s+)?(?:async\s+)?function\s+([A-Za-z0-9_$]+)/);
     if (funcMatch) {
       symbols.push({
@@ -116,7 +200,6 @@ export function extractJsTsSymbols(relFile: string, content: string): CodeSymbol
       });
     }
 
-    // Match class definition
     const classMatch = line.match(/(?:export\s+)?class\s+([A-Za-z0-9_$]+)/);
     if (classMatch) {
       symbols.push({
@@ -128,7 +211,6 @@ export function extractJsTsSymbols(relFile: string, content: string): CodeSymbol
       });
     }
 
-    // Match const/let function definitions or arrow functions
     const arrowMatch = line.match(/(?:export\s+)?const\s+([A-Za-z0-9_$]+)\s*=\s*(?:async\s*)?\(/);
     if (arrowMatch) {
       symbols.push({
@@ -140,7 +222,6 @@ export function extractJsTsSymbols(relFile: string, content: string): CodeSymbol
       });
     }
 
-    // Match type/interface definition
     const interfaceMatch = line.match(/(?:export\s+)?(?:interface|type)\s+([A-Za-z0-9_$]+)/);
     if (interfaceMatch) {
       symbols.push({

@@ -4,6 +4,7 @@ import { useState, useEffect, use, useRef } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { ReviewProgress } from '@/components/ReviewProgress';
 import { FindingDetailModal } from '@/components/FindingDetailModal';
+import ChatPanel from '@/components/ChatPanel';
 import { CustomDropdown, DropdownOption } from '@/components/CustomDropdown';
 import { Review, Finding } from '@/types/domain';
 import { toast } from 'react-toastify';
@@ -27,6 +28,8 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import Link from 'next/link';
+
+import { ExportDropdown } from '@/components/ExportDropdown';
 
 export default function ReviewDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: reviewId } = use(params);
@@ -201,14 +204,34 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
             </div>
           </div>
 
-          <button
-            onClick={() => fetchReviewData(true)}
-            disabled={isRefreshing}
-            className="flex items-center justify-center gap-2 rounded-2xl border border-slate-800 bg-slate-900 px-5 py-2.5 text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white transition-colors shadow-md disabled:opacity-50 cursor-pointer"
-          >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin text-indigo-400' : ''}`} />
-            {isRefreshing ? 'Refreshing...' : 'Refresh Report'}
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            {review && (
+              <ExportDropdown
+                findings={filteredFindings}
+                repoName={review.repositorySource}
+                commitSha={review.commitSha}
+              />
+            )}
+
+            {review && (
+              <Link
+                href={`/optimize?reviewId=${reviewId}&repo=${encodeURIComponent(review.repositorySource)}&provider=${review.provider}`}
+                className="flex items-center justify-center gap-2 rounded-2xl border border-indigo-500/40 bg-indigo-600/20 px-5 py-2.5 text-xs font-bold text-indigo-300 hover:bg-indigo-600 hover:text-white transition-all shadow-md cursor-pointer"
+              >
+                <Zap className="h-4 w-4" />
+                Open in Optimizer &rarr;
+              </Link>
+            )}
+
+            <button
+              onClick={() => fetchReviewData(true)}
+              disabled={isRefreshing}
+              className="flex items-center justify-center gap-2 rounded-2xl border border-slate-800 bg-slate-900 px-5 py-2.5 text-xs font-bold text-slate-300 hover:bg-slate-800 hover:text-white transition-colors shadow-md disabled:opacity-50 cursor-pointer"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin text-indigo-400' : ''}`} />
+              {isRefreshing ? 'Refreshing...' : 'Refresh Report'}
+            </button>
+          </div>
         </div>
 
         {/* Progress Timeline */}
@@ -307,6 +330,14 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
 
             {/* Filter controls */}
             <div className="flex flex-wrap items-center gap-3">
+              {review && (
+                <ExportDropdown
+                  findings={filteredFindings}
+                  repoName={review.repositorySource}
+                  commitSha={review.commitSha}
+                />
+              )}
+
               {/* Search Bar */}
               <div className="relative min-w-[240px]">
                 <Search className="h-4 w-4 absolute left-3.5 top-3 text-slate-400" />
@@ -546,6 +577,8 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
         onClose={() => setSelectedFinding(null)}
         onStatusChange={handleStatusChange}
       />
+
+      <ChatPanel reviewId={reviewId} />
     </div>
   );
 }

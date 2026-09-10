@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { GitBranch, Code2, FolderGit2, Globe, Shield, Loader2, Play, Sparkles, FolderOpen, AlertCircle } from 'lucide-react';
+import { GitBranch, Code2, FolderGit2, Globe, Shield, Loader2, Play, Sparkles, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 
 export function NewReviewModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const router = useRouter();
   const [provider, setProvider] = useState<'github' | 'gitlab' | 'url' | 'local'>('local');
-  const [source, setSource] = useState('.');
+  const [source, setSource] = useState('');
   const [commitSha, setCommitSha] = useState('');
   const [branch, setBranch] = useState('main');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,6 +30,13 @@ export function NewReviewModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!source.trim()) {
+      const msg = 'Please enter a repository path or URL.';
+      setValidationError(msg);
+      toast.error(msg);
+      return;
+    }
+
     setIsSubmitting(true);
     setValidationError(null);
 
@@ -65,20 +72,6 @@ export function NewReviewModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
     }
   }
 
-  const setPreset = (type: 'current' | 'express' | 'react') => {
-    setValidationError(null);
-    if (type === 'current') {
-      setProvider('local');
-      setSource('.');
-    } else if (type === 'express') {
-      setProvider('github');
-      setSource('expressjs/express');
-    } else if (type === 'react') {
-      setProvider('github');
-      setSource('facebook/react');
-    }
-  };
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
       <div className="relative w-full max-w-xl overflow-hidden rounded-3xl border border-slate-700/60 bg-slate-900/90 p-7 shadow-2xl shadow-indigo-950/40 backdrop-blur-2xl">
@@ -102,48 +95,9 @@ export function NewReviewModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
-          >
-            &times;
-          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="relative space-y-6">
-          {/* Presets */}
-          <div>
-            <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
-              Quick Preset Samples
-            </span>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => setPreset('current')}
-                className="flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-1.5 text-xs font-medium text-slate-300 hover:border-indigo-500/50 hover:text-white transition-colors cursor-pointer"
-              >
-                <FolderOpen className="h-3.5 w-3.5 text-indigo-400" />
-                Current Project
-              </button>
-              <button
-                type="button"
-                onClick={() => setPreset('express')}
-                className="flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-1.5 text-xs font-medium text-slate-300 hover:border-indigo-500/50 hover:text-white transition-colors cursor-pointer"
-              >
-                <Code2 className="h-3.5 w-3.5 text-purple-400" />
-                expressjs/express
-              </button>
-              <button
-                type="button"
-                onClick={() => setPreset('react')}
-                className="flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-1.5 text-xs font-medium text-slate-300 hover:border-indigo-500/50 hover:text-white transition-colors cursor-pointer"
-              >
-                <Code2 className="h-3.5 w-3.5 text-cyan-400" />
-                facebook/react
-              </button>
-            </div>
-          </div>
-
           {/* Provider Selector */}
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
@@ -255,14 +209,14 @@ export function NewReviewModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
             <button
               type="button"
               onClick={onClose}
-              className="rounded-2xl border border-slate-800 bg-slate-900 px-5 py-2.5 text-xs font-bold text-slate-300 hover:bg-slate-800 transition-colors cursor-pointer"
+              className="rounded-2xl border border-slate-700/80 bg-slate-800/90 hover:bg-slate-700/90 px-6 py-3 text-xs font-extrabold text-slate-200 hover:text-white transition-all shadow-md hover:border-slate-600 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-2.5 text-xs font-bold text-white hover:from-indigo-500 hover:to-purple-500 disabled:opacity-50 transition-colors shadow-xl shadow-indigo-600/20 cursor-pointer"
+              className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-3 text-xs font-extrabold text-white hover:from-indigo-500 hover:to-purple-500 disabled:opacity-50 transition-all shadow-xl shadow-indigo-600/30 cursor-pointer"
             >
               {isSubmitting ? (
                 <>
