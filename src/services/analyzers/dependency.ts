@@ -17,6 +17,7 @@ export async function runDependencyAnalyzer(workspacePath: string): Promise<Find
   const pkgJsonPath = path.join(workspacePath, 'package.json');
   try {
     const raw = await fs.readFile(pkgJsonPath, 'utf-8');
+    const rawLines = raw.split('\n');
     const parsed = JSON.parse(raw);
     const deps = { ...parsed.dependencies, ...parsed.devDependencies };
 
@@ -24,6 +25,8 @@ export async function runDependencyAnalyzer(workspacePath: string): Promise<Find
       const pkgName = pkg.toLowerCase();
       if (KNOWN_VULNERABLE_PACKAGES[pkgName]) {
         const vuln = KNOWN_VULNERABLE_PACKAGES[pkgName];
+        const lineIdx = rawLines.findIndex((l) => l.includes(`"${pkg}"`));
+        const lineNum = lineIdx !== -1 ? lineIdx + 1 : 1;
         findings.push({
           id: `finding-${uuidv4().slice(0, 8)}`,
           category: 'dependency',
@@ -33,9 +36,9 @@ export async function runDependencyAnalyzer(workspacePath: string): Promise<Find
           confidence: 0.95,
           status: 'confirmed',
           file: 'package.json',
-          start_line: 1,
-          end_line: 1,
-          evidence: `"${pkg}": "${version}"`,
+          start_line: lineNum,
+          end_line: lineNum,
+          evidence: lineIdx !== -1 ? rawLines[lineIdx].trim() : `"${pkg}": "${version}"`,
           explanation: `Dependency ${pkg} version ${version} is flagged under ${vuln.cve}.`,
           recommended_fix: vuln.fix,
           verification: {

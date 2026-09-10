@@ -64,50 +64,66 @@ export async function captureRepoSnapshot(
     languages: {},
   };
 
-  let totalBytes = 0;
-  let fileCount = 0;
   const gitignorePatterns = await loadGitignorePatterns(workspacePath);
 
+  // Filter valid candidate paths first
+  const validCandidates: { relativePath: string; fullPath: string; ext: string }[] = [];
   for (const item of fileInventory) {
-    if (fileCount >= MAX_FILES || totalBytes >= MAX_TOTAL_BYTES) break;
-
+    if (validCandidates.length >= MAX_FILES) break;
     const fullPath = path.isAbsolute(item) ? item : path.join(workspacePath, item);
     const relativePath = path.relative(workspacePath, fullPath).replace(/\\/g, '/');
 
-    // Skip if relative path goes outside workspaceRoot or matches gitignore
     if (relativePath.startsWith('..') || isIgnoredPath(relativePath, gitignorePatterns)) {
       continue;
     }
 
     const ext = path.extname(fullPath).toLowerCase();
-    const basename = path.basename(fullPath);
-
     if (BINARY_EXTENSIONS.has(ext)) continue;
 
-    try {
-      const stats = await fs.stat(fullPath);
-      if (stats.size > MAX_FILE_BYTES) continue;
+    validCandidates.push({ relativePath, fullPath, ext });
+  }
 
-      const content = await fs.readFile(fullPath, 'utf-8');
-      const language = detectLanguage(ext);
+  // Read files in parallel batches of 25 for blazing fast async I/O
+  const BATCH_SIZE = 25;
+  let totalBytes = 0;
 
-      snapshot.files.push({
-        relativePath,
-        content,
-        language,
-        lineCount: content.split('\n').length,
-        sizeBytes: stats.size,
-      });
+  for (let i = 0; i < validCandidates.length; i += BATCH_SIZE) {
+    if (totalBytes >= MAX_TOTAL_BYTES) break;
+    const batch = validCandidates.slice(i, i + BATCH_SIZE);
 
-      totalBytes += stats.size;
-      fileCount++;
-      snapshot.languages[language] = (snapshot.languages[language] || 0) + 1;
-    } catch {
-      // Skip unreadable files silently
+    const results = await Promise.all(
+      batch.map(async ({ relativePath, fullPath, ext }) => {
+        try {
+          const stats = await fs.stat(fullPath);
+          if (stats.size > MAX_FILE_BYTES) return null;
+
+          const content = await fs.readFile(fullPath, 'utf-8');
+          const language = detectLanguage(ext);
+
+          return {
+            relativePath,
+            content,
+            language,
+            lineCount: content.split('\n').length,
+            sizeBytes: stats.size,
+          };
+        } catch {
+          return null;
+        }
+      })
+    );
+
+    for (const res of results) {
+      if (!res) continue;
+      if (totalBytes + res.sizeBytes > MAX_TOTAL_BYTES) break;
+
+      snapshot.files.push(res);
+      totalBytes += res.sizeBytes;
+      snapshot.languages[res.language] = (snapshot.languages[res.language] || 0) + 1;
     }
   }
 
-  snapshot.totalFiles = fileCount;
+  snapshot.totalFiles = snapshot.files.length;
   snapshot.totalSizeBytes = totalBytes;
   return snapshot;
 }

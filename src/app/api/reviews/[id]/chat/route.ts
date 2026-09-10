@@ -151,7 +151,7 @@ ${historyText ? `\n## CONVERSATION HISTORY:\n${historyText}` : ''}`;
           `- **Total Findings**: **${findings.length}**\n` +
           `- **Files Scanned**: **${review.summary?.filesAffected || snapshot?.files.length || 0}**\n\n` +
           `Key issues identified include ${findings.slice(0, 2).map(f => `\`${f.title}\``).join(' and ') || 'no major defects'}.\n\n` +
-          `*(Note: Add a valid Gemini API key starting with \`AIzaSy\` in your \`.env.local\` file to connect to live Gemini 2.0 Flash).*`;
+          `*(Note: Add a valid Gemini API key in your \`.env.local\` file to connect to live Gemini 3.6 Flash).*`;
       }
 
       const stream = new ReadableStream({
@@ -165,10 +165,12 @@ ${historyText ? `\n## CONVERSATION HISTORY:\n${historyText}` : ''}`;
 
     const candidateModels = Array.from(new Set([
       config.geminiChatModel,
-      'gemini-1.5-flash-latest',
-      'gemini-2.0-flash',
-      'gemini-2.5-flash',
-      'gemini-1.5-pro',
+      config.geminiModel,
+      'gemini-3.7-flash',
+      'gemini-3.5-flash',
+      'gemini-flash-lite-latest',
+      'gemini-3.5-flash-lite',
+      'gemini-3.1-flash-lite',
     ])).filter(Boolean);
 
     const stream = new ReadableStream({
@@ -194,7 +196,7 @@ ${historyText ? `\n## CONVERSATION HISTORY:\n${historyText}` : ''}`;
               break;
             } catch (err: any) {
               lastError = err;
-              if (err?.message?.includes('404') || err?.message?.includes('not found') || err?.message?.includes('ModelService')) {
+              if (err?.message?.includes('404') || err?.message?.includes('not found') || err?.message?.includes('ModelService') || err?.message?.includes('no longer available') || err?.message?.includes('429') || err?.message?.includes('Quota')) {
                 console.warn(`Model ${modelName} not available, trying next fallback...`);
                 continue;
               }

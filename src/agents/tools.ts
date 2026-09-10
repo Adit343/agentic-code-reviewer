@@ -11,8 +11,18 @@ export class AgentToolSet {
     private workspacePath: string,
     private staticFindings: Finding[],
     private dependencyFindings: Finding[],
-    private codeIndex?: CodeIndex
-  ) {}
+    private codeIndex?: CodeIndex,
+    preloadedFiles?: { relativePath: string; content: string }[]
+  ) {
+    if (preloadedFiles) {
+      for (const file of preloadedFiles) {
+        const lines = file.content.split('\n');
+        const resolved = path.resolve(workspacePath, file.relativePath);
+        this.fileCache.set(resolved, lines);
+        this.fileCache.set(file.relativePath, lines);
+      }
+    }
+  }
 
   async listFiles(subPath: string = '.', depth: number = 3): Promise<string[]> {
     if (this.codeIndex && subPath === '.') {

@@ -2,7 +2,7 @@ import { ReviewState, Finding, ReviewSummary } from '@/types/domain';
 import { acquireRepository } from '@/services/repository/acquisition';
 import { createIsolatedWorkspace } from '@/services/repository/workspace';
 import { computeGitDiff } from '@/services/repository/diff';
-import { buildCodeIndex } from '@/services/intelligence/codeIndex';
+import { buildCodeIndex, discoverWorkspaceFiles } from '@/services/intelligence/codeIndex';
 import { captureRepoSnapshot } from '@/services/repository/snapshot';
 import { runSemgrepAnalyzer } from '@/services/analyzers/semgrep';
 import { runQualityAnalyzer } from '@/services/analyzers/eslint';
@@ -42,31 +42,37 @@ export async function executeReviewPipeline(
     // Step 4: Compute diff if parent exists
     const diffResult = await computeGitDiff(workspace.path, acqResult.commitSha, acqResult.parentSha);
 
-    // Step 5: Code Intelligence Indexing
+    // Step 5: Fast single-pass snapshot
     await storage.updateReview(reviewId, {
       status: 'static_analysis',
       progressPercent: 30,
-      currentPhase: 'Building code index and running deterministic analyzers...',
+      currentPhase: 'Capturing repository snapshot and indexing code...',
       commitSha: acqResult.commitSha,
       parentSha: acqResult.parentSha,
     });
 
-    // Step 5 & 6: Run Code Intelligence Indexing and Deterministic Analyzers concurrently
+    const fileInventory = await discoverWorkspaceFiles(workspace.path);
+    const snapshot = await captureRepoSnapshot(workspace.path, fileInventory, reviewId);
+    storage.saveRepoSnapshot(reviewId, snapshot);
+
+    // Step 6: Run Code Intelligence Indexing and Deterministic Analyzers concurrently in memory
+    await storage.updateReview(reviewId, {
+      status: 'static_analysis',
+      progressPercent: 45,
+      currentPhase: 'Running deterministic static and security analyzers...',
+    });
+
     const [codeIndex, staticFindings, qualityFindings, dependencyFindings] = await Promise.all([
-      buildCodeIndex(workspace.path),
-      runSemgrepAnalyzer(workspace.path),
-      runQualityAnalyzer(workspace.path),
+      buildCodeIndex(workspace.path, snapshot.files),
+      runSemgrepAnalyzer(workspace.path, snapshot.files),
+      runQualityAnalyzer(workspace.path, snapshot.files),
       runDependencyAnalyzer(workspace.path),
     ]);
 
-    // Capture repo snapshot for chatbot and optimizer features (BEFORE workspace cleanup)
-    const snapshot = await captureRepoSnapshot(workspace.path, codeIndex.files, reviewId);
-    storage.saveRepoSnapshot(reviewId, snapshot);
-
     const allStatic = [...staticFindings, ...qualityFindings];
 
-    // Tool set for agents (reusing precomputed codeIndex for 0ms symbol/import lookups)
-    const tools = new AgentToolSet(workspace.path, allStatic, dependencyFindings, codeIndex);
+    // Tool set for agents (with preloaded snapshot files for 0ms in-memory reads and precomputed codeIndex)
+    const tools = new AgentToolSet(workspace.path, allStatic, dependencyFindings, codeIndex, snapshot.files);
 
     let state: ReviewState = {
       reviewId,

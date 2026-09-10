@@ -97,7 +97,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
       if (currentStatus && currentStatus !== 'completed' && currentStatus !== 'failed') {
         fetchReviewData();
       }
-    }, 1000);
+    }, 600);
 
     return () => clearInterval(interval);
   }, [reviewId]);

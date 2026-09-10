@@ -113,10 +113,9 @@ export function isIgnoredPath(relPath: string, patterns: string[]): boolean {
   return false;
 }
 
-export async function buildCodeIndex(workspacePath: string): Promise<CodeIndex> {
-  const files: string[] = [];
-  const languages: Record<string, number> = {};
+export async function discoverWorkspaceFiles(workspacePath: string): Promise<string[]> {
   const gitignorePatterns = await loadGitignorePatterns(workspacePath);
+  const files: string[] = [];
 
   async function walkDir(currentPath: string, relativePrefix: string = '') {
     let entries;
@@ -137,33 +136,71 @@ export async function buildCodeIndex(workspacePath: string): Promise<CodeIndex> 
       } else if (entry.isFile()) {
         const ext = path.extname(entry.name).toLowerCase();
         if (BINARY_EXTENSIONS.has(ext)) continue;
-
         files.push(relPath);
-        const lang = LANGUAGE_EXTENSIONS[ext] || 'Other';
-        languages[lang] = (languages[lang] || 0) + 1;
       }
     }
   }
 
   await walkDir(workspacePath);
+  return files;
+}
 
+export async function buildCodeIndex(
+  workspacePath: string,
+  preloadedFiles?: { relativePath: string; content: string }[]
+): Promise<CodeIndex> {
+  const files: string[] = [];
+  const languages: Record<string, number> = {};
   const symbols: CodeSymbol[] = [];
   const imports: ImportRelation[] = [];
   const callGraph: Record<string, string[]> = {};
 
-  // Parse JS/TS files for symbols & imports
-  for (const relFile of files) {
-    if (!/\.(js|jsx|ts|tsx)$/i.test(relFile)) continue;
-    const fullPath = path.join(workspacePath, relFile);
-    try {
-      const content = await fs.readFile(fullPath, 'utf-8');
-      const fileSymbols = extractJsTsSymbols(relFile, content);
-      symbols.push(...fileSymbols);
+  if (preloadedFiles && preloadedFiles.length > 0) {
+    // Fast path: In-memory index building from preloaded snapshot
+    for (const item of preloadedFiles) {
+      files.push(item.relativePath);
+      const ext = path.extname(item.relativePath).toLowerCase();
+      const lang = LANGUAGE_EXTENSIONS[ext] || 'Other';
+      languages[lang] = (languages[lang] || 0) + 1;
 
-      const fileImports = extractJsTsImports(relFile, content);
-      imports.push(...fileImports);
-    } catch {
-      // ignore individual unreadable files
+      if (/\.(js|jsx|ts|tsx)$/i.test(item.relativePath)) {
+        const fileSymbols = extractJsTsSymbols(item.relativePath, item.content);
+        symbols.push(...fileSymbols);
+
+        const fileImports = extractJsTsImports(item.relativePath, item.content);
+        imports.push(...fileImports);
+      }
+    }
+  } else {
+    // Disk path: Discover files and load symbols if preloaded files are not provided
+    const discoveredFiles = await discoverWorkspaceFiles(workspacePath);
+    for (const f of discoveredFiles) {
+      files.push(f);
+      const ext = path.extname(f).toLowerCase();
+      const lang = LANGUAGE_EXTENSIONS[ext] || 'Other';
+      languages[lang] = (languages[lang] || 0) + 1;
+    }
+
+    // Parallel batch reading of JS/TS files for symbols & imports
+    const jsTsFiles = files.filter(f => /\.(js|jsx|ts|tsx)$/i.test(f));
+    const BATCH_SIZE = 25;
+    for (let i = 0; i < jsTsFiles.length; i += BATCH_SIZE) {
+      const batch = jsTsFiles.slice(i, i + BATCH_SIZE);
+      await Promise.all(
+        batch.map(async (relFile) => {
+          const fullPath = path.join(workspacePath, relFile);
+          try {
+            const content = await fs.readFile(fullPath, 'utf-8');
+            const fileSymbols = extractJsTsSymbols(relFile, content);
+            symbols.push(...fileSymbols);
+
+            const fileImports = extractJsTsImports(relFile, content);
+            imports.push(...fileImports);
+          } catch {
+            // ignore individual unreadable files
+          }
+        })
+      );
     }
   }
 

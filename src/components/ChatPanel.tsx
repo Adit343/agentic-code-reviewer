@@ -290,7 +290,7 @@ export default function ChatPanel({ reviewId }: ChatPanelProps) {
             <span className="flex items-center gap-1">
               <CornerDownLeft className="w-3 h-3 text-slate-600" /> Enter to send • Shift+Enter for newline
             </span>
-            <span className="text-indigo-400/80 font-medium">Gemini 2.0 Flash</span>
+            <span className="text-indigo-400/80 font-medium">Gemini 3.6 Flash</span>
           </div>
         </div>
       </div>

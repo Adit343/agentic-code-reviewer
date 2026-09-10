@@ -1,32 +1,8 @@
-import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
-import { config } from '@/lib/config';
 import { Finding, ReviewState } from '@/types/domain';
 import { AgentToolSet } from './tools';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function runSecurityAgent(state: ReviewState, tools: AgentToolSet): Promise<Finding[]> {
-  if (!config.isMockLlm) {
-    try {
-      const model = new ChatGoogleGenerativeAI({
-        apiKey: config.geminiApiKey,
-        model: config.geminiModel,
-        temperature: 0.1,
-      });
-
-      const prompt = `You are a Security Agent performing static & dynamic code reasoning for security vulnerabilities.
-Review the static findings and files in workspace.
-Static findings: ${JSON.stringify(state.staticFindings)}
-File Inventory: ${JSON.stringify(state.fileInventory.slice(0, 50))}
-
-Return structured security findings with exact line numbers, severity, confidence, evidence, explanation, and recommended fix.`;
-
-      const response = await model.invoke(prompt);
-      // Process model output if valid
-    } catch {
-      // Fallback to deterministic security reasoning engine
-    }
-  }
-
   // Deterministic Security Agent reasoning over candidate static findings
   const candidateFindings: Finding[] = [...state.staticFindings.filter((f) => f.category === 'security')];
 
@@ -34,7 +10,12 @@ Return structured security findings with exact line numbers, severity, confidenc
   const authFiles = state.fileInventory.filter((f) => /auth|login|session|jwt|token|user/i.test(f));
   for (const file of authFiles.slice(0, 10)) {
     const fileData = await tools.readFile(file, 1, 100);
-    if (fileData.content.includes('password') && !fileData.content.includes('hash') && !fileData.content.includes('bcrypt')) {
+    const lines = fileData.content.split('\n');
+    const pwdLineIdx = lines.findIndex(
+      (l) => /password/i.test(l) && !/hash|bcrypt|argon|pbkdf/i.test(l)
+    );
+    if (pwdLineIdx !== -1) {
+      const lineNum = pwdLineIdx + 1;
       candidateFindings.push({
         id: `finding-${uuidv4().slice(0, 8)}`,
         category: 'security',
@@ -44,9 +25,9 @@ Return structured security findings with exact line numbers, severity, confidenc
         confidence: 0.82,
         status: 'likely',
         file,
-        start_line: 15,
-        end_line: 25,
-        evidence: 'Password variable processed without visible bcrypt/argon2 hashing call.',
+        start_line: lineNum,
+        end_line: lineNum,
+        evidence: lines[pwdLineIdx].trim(),
         explanation: 'Authentication file references raw password variable without evidence of cryptographic password hashing.',
         recommended_fix: 'Ensure passwords are hashed using bcrypt, argon2, or PBKDF2 before storage or comparison.',
         verification: {
@@ -70,7 +51,12 @@ export async function runBugAgent(state: ReviewState, tools: AgentToolSet): Prom
     if (diffMatches) {
       for (const file of state.fileInventory.filter((f) => /\.(ts|tsx|js|jsx)$/.test(f)).slice(0, 10)) {
         const data = await tools.readFile(file, 1, 150);
-        if (data.content.includes('.map(') && !data.content.includes('Array.isArray') && !data.content.includes('?.map')) {
+        const lines = data.content.split('\n');
+        const mapLineIdx = lines.findIndex(
+          (l) => l.includes('.map(') && !l.includes('Array.isArray') && !l.includes('?.map')
+        );
+        if (mapLineIdx !== -1) {
+          const lineNum = mapLineIdx + 1;
           candidateFindings.push({
             id: `finding-${uuidv4().slice(0, 8)}`,
             category: 'bug',
@@ -80,9 +66,9 @@ export async function runBugAgent(state: ReviewState, tools: AgentToolSet): Prom
             confidence: 0.78,
             status: 'likely',
             file,
-            start_line: 20,
-            end_line: 30,
-            evidence: 'Call to .map() without prior Array.isArray() check or optional chaining.',
+            start_line: lineNum,
+            end_line: lineNum,
+            evidence: lines[mapLineIdx].trim(),
             explanation: 'Calling .map() directly on asynchronous API responses without validating array type causes runtime crashes if response is null or an object error payload.',
             recommended_fix: 'Use optional chaining `data?.map(...)` or check `Array.isArray(data)`.',
             verification: {

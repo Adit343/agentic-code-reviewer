@@ -7,41 +7,11 @@ import { v4 as uuidv4 } from 'uuid';
 
 const execAsync = promisify(exec);
 
-export async function runSemgrepAnalyzer(workspacePath: string): Promise<Finding[]> {
-  try {
-    // Attempt system semgrep execution if available
-    const { stdout } = await execAsync(`semgrep --config=auto --json "${workspacePath}"`, {
-      timeout: 30000,
-      maxBuffer: 10 * 1024 * 1024,
-    });
-    const parsed = JSON.parse(stdout);
-    if (parsed && Array.isArray(parsed.results)) {
-      return parsed.results.map((res: any) => ({
-        id: `finding-${uuidv4().slice(0, 8)}`,
-        category: 'security',
-        rule: res.check_id || 'SEMGREP_RULE',
-        title: res.extra?.message || 'Semgrep Security Finding',
-        severity: mapSemgrepSeverity(res.extra?.severity),
-        confidence: 0.9,
-        status: 'likely',
-        file: path.relative(workspacePath, res.path),
-        start_line: res.start?.line || 1,
-        end_line: res.end?.line || 1,
-        evidence: res.extra?.lines || '',
-        explanation: res.extra?.message || 'Pattern detected by Semgrep SAST rule.',
-        recommended_fix: res.extra?.fix || 'Review and sanitize input before processing.',
-        verification: {
-          checks_performed: ['semgrep_sast'],
-          counter_evidence_considered: [],
-          tools: ['semgrep'],
-        },
-      }));
-    }
-  } catch {
-    // Semgrep binary not installed or failed - fallback to deterministic pattern scanner
-  }
-
-  return runDeterministicPatternScanner(workspacePath);
+export async function runSemgrepAnalyzer(
+  workspacePath: string,
+  preloadedFiles?: { relativePath: string; content: string }[]
+): Promise<Finding[]> {
+  return runDeterministicPatternScanner(workspacePath, preloadedFiles);
 }
 
 function mapSemgrepSeverity(sev?: string): Finding['severity'] {
@@ -51,7 +21,10 @@ function mapSemgrepSeverity(sev?: string): Finding['severity'] {
   return 'medium';
 }
 
-async function runDeterministicPatternScanner(workspacePath: string): Promise<Finding[]> {
+async function runDeterministicPatternScanner(
+  workspacePath: string,
+  preloadedFiles?: { relativePath: string; content: string }[]
+): Promise<Finding[]> {
   const findings: Finding[] = [];
 
   const PATTERNS: Array<{
@@ -110,60 +83,74 @@ async function runDeterministicPatternScanner(workspacePath: string): Promise<Fi
     },
   ];
 
-  async function scanDir(dir: string, relDir: string = '') {
-    let entries;
-    try {
-      entries = await fs.readdir(dir, { withFileTypes: true });
-    } catch {
-      return;
-    }
-
-    for (const entry of entries) {
-      if (['node_modules', '.git', '.next', 'dist', 'build'].includes(entry.name)) continue;
-
-      const relPath = relDir ? `${relDir}/${entry.name}` : entry.name;
-      const fullPath = path.join(dir, entry.name);
-
-      if (entry.isDirectory()) {
-        await scanDir(fullPath, relPath);
-      } else if (entry.isFile() && /\.(js|jsx|ts|tsx|py|go|java)$/i.test(entry.name)) {
-        try {
-          const content = await fs.readFile(fullPath, 'utf-8');
-          const lines = content.split('\n');
-
-          lines.forEach((line, idx) => {
-            for (const pat of PATTERNS) {
-              if (pat.regex.test(line)) {
-                findings.push({
-                  id: `finding-${uuidv4().slice(0, 8)}`,
-                  category: pat.category,
-                  rule: pat.rule,
-                  title: pat.title,
-                  severity: pat.severity,
-                  confidence: 0.85,
-                  status: 'likely',
-                  file: relPath,
-                  start_line: idx + 1,
-                  end_line: idx + 1,
-                  evidence: line.trim(),
-                  explanation: pat.explanation,
-                  recommended_fix: pat.recommended_fix,
-                  verification: {
-                    checks_performed: ['deterministic_sast_pattern'],
-                    counter_evidence_considered: [],
-                    tools: ['pattern_scanner'],
-                  },
-                });
-              }
-            }
+  function analyzeFile(relPath: string, content: string) {
+    const lines = content.split('\n');
+    lines.forEach((line, idx) => {
+      for (const pat of PATTERNS) {
+        if (pat.regex.test(line)) {
+          findings.push({
+            id: `finding-${uuidv4().slice(0, 8)}`,
+            category: pat.category,
+            rule: pat.rule,
+            title: pat.title,
+            severity: pat.severity,
+            confidence: 0.85,
+            status: 'likely',
+            file: relPath,
+            start_line: idx + 1,
+            end_line: idx + 1,
+            evidence: line.trim(),
+            explanation: pat.explanation,
+            recommended_fix: pat.recommended_fix,
+            verification: {
+              checks_performed: ['deterministic_sast_pattern'],
+              counter_evidence_considered: [],
+              tools: ['pattern_scanner'],
+            },
           });
-        } catch {
-          // ignore read error
+        }
+      }
+    });
+  }
+
+  if (preloadedFiles && preloadedFiles.length > 0) {
+    // Ultra-fast in-memory scan
+    for (const f of preloadedFiles) {
+      if (/\.(js|jsx|ts|tsx|py|go|java|php|rb|cs|c|cpp|sql)$/i.test(f.relativePath)) {
+        analyzeFile(f.relativePath, f.content);
+      }
+    }
+  } else {
+    // Disk fallback if no preloaded files
+    async function scanDir(dir: string, relDir: string = '') {
+      let entries;
+      try {
+        entries = await fs.readdir(dir, { withFileTypes: true });
+      } catch {
+        return;
+      }
+
+      for (const entry of entries) {
+        if (['node_modules', '.git', '.next', 'dist', 'build'].includes(entry.name)) continue;
+
+        const relPath = relDir ? `${relDir}/${entry.name}` : entry.name;
+        const fullPath = path.join(dir, entry.name);
+
+        if (entry.isDirectory()) {
+          await scanDir(fullPath, relPath);
+        } else if (entry.isFile() && /\.(js|jsx|ts|tsx|py|go|java)$/i.test(entry.name)) {
+          try {
+            const content = await fs.readFile(fullPath, 'utf-8');
+            analyzeFile(relPath, content);
+          } catch {
+            // ignore read error
+          }
         }
       }
     }
+
+    await scanDir(workspacePath);
   }
 
-  await scanDir(workspacePath);
   return findings;
 }

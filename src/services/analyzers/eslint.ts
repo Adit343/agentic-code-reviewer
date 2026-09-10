@@ -3,7 +3,10 @@ import path from 'path';
 import { Finding } from '@/types/domain';
 import { v4 as uuidv4 } from 'uuid';
 
-export async function runQualityAnalyzer(workspacePath: string): Promise<Finding[]> {
+export async function runQualityAnalyzer(
+  workspacePath: string,
+  preloadedFiles?: { relativePath: string; content: string }[]
+): Promise<Finding[]> {
   const findings: Finding[] = [];
 
   const QUALITY_RULES = [
@@ -41,6 +44,45 @@ export async function runQualityAnalyzer(workspacePath: string): Promise<Finding
     },
   ];
 
+  function processFile(relPath: string, content: string) {
+    if (!/\.(js|jsx|ts|tsx)$/i.test(relPath)) return;
+    const lines = content.split('\n');
+
+    lines.forEach((line, idx) => {
+      for (const r of QUALITY_RULES) {
+        if (r.regex.test(line)) {
+          findings.push({
+            id: `finding-${uuidv4().slice(0, 8)}`,
+            category: 'quality',
+            rule: r.rule,
+            title: r.title,
+            severity: r.severity,
+            confidence: 0.8,
+            status: 'likely',
+            file: relPath,
+            start_line: idx + 1,
+            end_line: idx + 1,
+            evidence: line.trim(),
+            explanation: r.explanation,
+            recommended_fix: r.fix,
+            verification: {
+              checks_performed: ['quality_lint_rules'],
+              counter_evidence_considered: [],
+              tools: ['eslint_quality'],
+            },
+          });
+        }
+      }
+    });
+  }
+
+  if (preloadedFiles && preloadedFiles.length > 0) {
+    for (const file of preloadedFiles) {
+      processFile(file.relativePath, file.content);
+    }
+    return findings;
+  }
+
   async function scanDir(dir: string, relDir: string = '') {
     let entries;
     try {
@@ -60,34 +102,7 @@ export async function runQualityAnalyzer(workspacePath: string): Promise<Finding
       } else if (entry.isFile() && /\.(js|jsx|ts|tsx)$/i.test(entry.name)) {
         try {
           const content = await fs.readFile(fullPath, 'utf-8');
-          const lines = content.split('\n');
-
-          lines.forEach((line, idx) => {
-            for (const r of QUALITY_RULES) {
-              if (r.regex.test(line)) {
-                findings.push({
-                  id: `finding-${uuidv4().slice(0, 8)}`,
-                  category: 'quality',
-                  rule: r.rule,
-                  title: r.title,
-                  severity: r.severity,
-                  confidence: 0.8,
-                  status: 'likely',
-                  file: relPath,
-                  start_line: idx + 1,
-                  end_line: idx + 1,
-                  evidence: line.trim(),
-                  explanation: r.explanation,
-                  recommended_fix: r.fix,
-                  verification: {
-                    checks_performed: ['quality_lint_rules'],
-                    counter_evidence_considered: [],
-                    tools: ['eslint_quality'],
-                  },
-                });
-              }
-            }
-          });
+          processFile(relPath, content);
         } catch {
           // ignore
         }

@@ -256,9 +256,20 @@ export async function acquireRepository(
     await fs.cp(canonicalPath, destinationWorkspace, {
       recursive: true,
       filter: (src) => {
-        // Exclude node_modules, build outputs, .next, dist to stay light & safe
+        // Exclude heavy non-source directories (.git, node_modules, build outputs, caches)
         const base = path.basename(src);
-        return base !== 'node_modules' && base !== '.next' && base !== 'dist' && base !== 'build';
+        return (
+          base !== '.git' &&
+          base !== 'node_modules' &&
+          base !== '.next' &&
+          base !== 'dist' &&
+          base !== 'build' &&
+          base !== '.cache' &&
+          base !== '.turbo' &&
+          base !== '.venv' &&
+          base !== 'coverage' &&
+          base !== '__pycache__'
+        );
       },
     });
 
@@ -338,7 +349,7 @@ export async function acquireRepository(
 
     const hostGit = simpleGit({ unsafe: { allowUnsafeEditor: true } }).env('GIT_TERMINAL_PROMPT', '0');
     try {
-      await hostGit.clone(cloneUrl, destinationWorkspace, ['--depth', '2']);
+      await hostGit.clone(cloneUrl, destinationWorkspace, ['--depth', '1', '--single-branch', '--no-tags']);
     } catch (gitErr: any) {
       const msg = gitErr.message || '';
       if (msg.includes('not found') || msg.includes('Repository not found') || msg.includes('fatal: repository')) {
