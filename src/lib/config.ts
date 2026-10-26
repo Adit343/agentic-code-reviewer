@@ -19,8 +19,8 @@ const isValidKey = key.trim().length > 10;
 
 export const config: AppConfig = {
   geminiApiKey: key,
-  geminiModel: process.env.GEMINI_MODEL || 'gemini-3.7-flash',
-  geminiChatModel: process.env.GEMINI_CHAT_MODEL || 'gemini-3.7-flash',
+  geminiModel: process.env.GEMINI_MODEL || 'gemini-3.8-flash',
+  geminiChatModel: process.env.GEMINI_CHAT_MODEL || 'gemini-3.8-flash',
   mongodbUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/agentic_code_reviewer',
   redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
   appUrl: process.env.APP_URL || 'http://localhost:3000',

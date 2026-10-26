@@ -230,7 +230,7 @@ export async function runOptimizationAgent(files: SnapshotFile[]): Promise<Optim
 
   const candidateModels = Array.from(new Set([
     config.geminiModel,
-    'gemini-3.7-flash',
+    'gemini-3.8-flash',
     'gemini-3.5-flash',
     'gemini-flash-lite-latest',
     'gemini-3.5-flash-lite',
