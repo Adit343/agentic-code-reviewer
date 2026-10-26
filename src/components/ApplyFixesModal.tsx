@@ -110,11 +110,11 @@ export function ApplyFixesModal({
   const titleOf = (id: string) => findings.find((f) => f.id === id)?.title || id;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 sm:p-6">
-      <div className="relative w-full max-w-3xl max-h-[88vh] flex flex-col rounded-3xl border border-slate-700/60 bg-slate-900/95 shadow-2xl overflow-hidden">
-        <div className="flex items-start justify-between border-b border-slate-800/80 p-6 shrink-0">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-2 sm:p-6">
+      <div className="relative w-full max-w-3xl max-h-[92dvh] sm:max-h-[88vh] flex flex-col rounded-3xl border border-slate-700/60 bg-slate-900/95 shadow-2xl overflow-hidden">
+        <div className="flex items-start justify-between gap-3 border-b border-slate-800/80 p-4 sm:p-6 shrink-0">
           <div className="space-y-1">
-            <h2 className="text-xl font-extrabold text-white flex items-center gap-2.5">
+            <h2 className="text-base sm:text-xl font-extrabold text-white flex items-center gap-2.5">
               <Wrench className="h-5 w-5 text-emerald-400" />
               {outcomes ? 'Fix Results' : `Review ${findings.length} proposed fix${findings.length === 1 ? '' : 'es'}`}
             </h2>
@@ -124,21 +124,21 @@ export function ApplyFixesModal({
           </div>
           <button
             onClick={onClose}
-            className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-800/80 text-slate-400 hover:bg-slate-700 hover:text-white transition-all cursor-pointer"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-800/80 text-slate-400 hover:bg-slate-700 hover:text-white transition-all cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
           {!outcomes && (
             <>
               <div className="space-y-2">
                 {findings.map((f) => (
                   <details key={f.id} className="rounded-2xl border border-slate-800 bg-slate-950/60 group" open={findings.length === 1}>
-                    <summary className="cursor-pointer list-none p-3.5 flex items-center justify-between gap-3">
-                      <span className="text-xs font-bold text-white">{f.title}</span>
-                      <span className="text-[10px] font-mono text-slate-500 shrink-0">
+                    <summary className="cursor-pointer list-none p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-3">
+                      <span className="text-xs font-bold text-white break-words">{f.title}</span>
+                      <span className="text-[10px] font-mono text-slate-500 sm:shrink-0 break-all">
                         {f.file}:{f.start_line}
                       </span>
                     </summary>
@@ -212,7 +212,7 @@ export function ApplyFixesModal({
             <div className="space-y-3">
               <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-xs text-emerald-200 flex gap-2">
                 <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" />
-                <span>
+                <span className="min-w-0 break-words">
                   {appliedCount} of {outcomes.length} fix{outcomes.length === 1 ? '' : 'es'} {appliedRoot ? `written to ${appliedRoot}` : 'processed'}.
                   {appliedRoot && ' Review the changes with `git diff` and undo with `git checkout .` if needed.'}
                 </span>
@@ -231,15 +231,15 @@ export function ApplyFixesModal({
               )}
               <ul className="space-y-1.5">
                 {outcomes.map((o) => (
-                  <li key={o.findingId} className="rounded-xl border border-slate-800 bg-slate-950/60 px-3.5 py-2.5 text-xs flex items-start justify-between gap-3">
-                    <span className="text-slate-200">
+                  <li key={o.findingId} className="rounded-xl border border-slate-800 bg-slate-950/60 px-3.5 py-2.5 text-xs flex flex-col sm:flex-row items-start justify-between gap-1 sm:gap-3">
+                    <span className="text-slate-200 min-w-0 break-words">
                       <span className="font-bold">{titleOf(o.findingId)}</span>
                       <span className="block font-mono text-[10px] text-slate-500">{o.file}</span>
                     </span>
                     {o.status === 'applied' ? (
                       <span className="text-emerald-400 font-bold shrink-0">Applied</span>
                     ) : (
-                      <span className="text-amber-400 shrink-0 max-w-[55%] text-right">Skipped — {o.reason}</span>
+                      <span className="text-amber-400 sm:shrink-0 sm:max-w-[55%] sm:text-right">Skipped — {o.reason}</span>
                     )}
                   </li>
                 ))}
@@ -248,7 +248,7 @@ export function ApplyFixesModal({
           )}
         </div>
 
-        <div className="flex flex-wrap items-center justify-end gap-3 border-t border-slate-800/80 p-5 shrink-0">
+        <div className="flex flex-col-reverse sm:flex-row sm:flex-wrap sm:items-center sm:justify-end gap-2 sm:gap-3 border-t border-slate-800/80 p-4 sm:p-5 shrink-0 [&>button]:justify-center">
           {outcomes ? (
             <button onClick={onClose} className="rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-indigo-500 cursor-pointer">
               Done

@@ -47,7 +47,7 @@ export function ReviewProgress({
   };
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-slate-800/80 bg-slate-900/60 p-6 backdrop-blur-xl shadow-2xl">
+    <div className="relative overflow-hidden rounded-3xl border border-slate-800/80 bg-slate-900/60 p-4 sm:p-6 backdrop-blur-xl shadow-2xl">
       {/* Background Glow */}
       <div className="absolute top-0 right-1/4 h-32 w-32 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
 
@@ -57,7 +57,7 @@ export function ReviewProgress({
             <ShieldCheck className="h-4 w-4 text-indigo-400" />
             <h3 className="text-sm font-bold text-white uppercase tracking-wider">Multi-Agent Review Pipeline</h3>
           </div>
-          <p className="text-xs font-mono text-slate-400">{currentPhase}</p>
+          <p className="text-xs font-mono text-slate-400 break-words">{currentPhase}</p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -86,13 +86,13 @@ export function ReviewProgress({
       </div>
 
       {/* Timeline Nodes */}
-      <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {PIPELINE_STEPS.map((step, idx) => {
           const stepStatus = getStepStatus(step.key);
           return (
             <div
               key={step.key}
-              className={`relative flex flex-col p-4 rounded-2xl border transition-all duration-300 ${
+              className={`relative flex flex-col p-3 sm:p-4 rounded-2xl border transition-all duration-300 ${
                 stepStatus === 'completed'
                   ? 'border-emerald-500/30 bg-emerald-500/5 text-emerald-300'
                   : stepStatus === 'in_progress'
@@ -124,7 +124,7 @@ export function ReviewProgress({
           <AlertCircle className="h-5 w-5 text-rose-400 shrink-0 mt-0.5" />
           <div className="space-y-1">
             <p className="font-bold text-rose-300">Execution Error</p>
-            <p className="text-slate-200 font-sans leading-relaxed">{error}</p>
+            <p className="text-slate-200 font-sans leading-relaxed break-words">{error}</p>
           </div>
         </div>
       )}

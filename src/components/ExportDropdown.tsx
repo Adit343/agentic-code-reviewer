@@ -60,11 +60,11 @@ export function ExportDropdown({
   };
 
   return (
-    <div ref={dropdownRef} className={`relative inline-block text-left z-30 ${className}`}>
+    <div ref={dropdownRef} className={`relative block sm:inline-block text-left z-30 ${className}`}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         disabled={findings.length === 0}
-        className="flex items-center gap-2 rounded-2xl border border-emerald-500/40 bg-emerald-600/20 px-4 py-2.5 text-xs font-bold text-emerald-300 hover:bg-emerald-600 hover:text-white transition-all shadow-md cursor-pointer disabled:opacity-50"
+        className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-2xl border border-emerald-500/40 bg-emerald-600/20 px-4 py-2.5 text-xs font-bold text-emerald-300 hover:bg-emerald-600 hover:text-white transition-all shadow-md cursor-pointer disabled:opacity-50"
       >
         <Download className="h-4 w-4" />
         <span>Export Findings ({findings.length})</span>
@@ -72,7 +72,7 @@ export function ExportDropdown({
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-slate-700/80 bg-slate-900/95 p-2 shadow-2xl backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150 z-50">
+        <div className="absolute right-0 mt-2 w-full sm:w-64 min-w-[16rem] max-w-[calc(100vw-2rem)] rounded-2xl border border-slate-700/80 bg-slate-900/95 p-2 shadow-2xl backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150 z-50">
           <div className="px-3 py-2 border-b border-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
             Download Format Options
           </div>

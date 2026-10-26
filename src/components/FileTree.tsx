@@ -106,7 +106,7 @@ export default function FileTree({ nodes, selectedPaths, onSelectionChange }: Fi
         <div key={node.path} className="select-none">
           <div
             className={`flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-slate-800/60 transition-colors group cursor-pointer text-xs`}
-            style={{ paddingLeft: `${depth * 18 + 8}px` }}
+            style={{ paddingLeft: `${depth * 12 + 8}px` }}
           >
             <div className="flex items-center gap-2 flex-1 min-w-0" onClick={() => toggleExpand(node.path)}>
               <button className="text-slate-400 hover:text-white p-0.5">
@@ -157,7 +157,7 @@ export default function FileTree({ nodes, selectedPaths, onSelectionChange }: Fi
         className={`flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-slate-800/80 transition-colors cursor-pointer text-xs ${
           isSelected ? 'bg-indigo-950/40 text-indigo-200' : 'text-slate-300'
         }`}
-        style={{ paddingLeft: `${depth * 18 + 24}px` }}
+        style={{ paddingLeft: `${depth * 12 + 20}px` }}
       >
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <FileCode2 className="w-4 h-4 text-indigo-400 shrink-0" />
@@ -171,7 +171,7 @@ export default function FileTree({ nodes, selectedPaths, onSelectionChange }: Fi
 
         <div className="flex items-center gap-3 shrink-0">
           {node.lineCount !== undefined && (
-            <span className="text-[10px] font-mono text-slate-500">{node.lineCount} lines</span>
+            <span className="hidden sm:inline text-[10px] font-mono text-slate-500">{node.lineCount} lines</span>
           )}
           <button className="text-slate-400 hover:text-indigo-400 transition-colors p-0.5">
             {isSelected ? (
@@ -186,7 +186,7 @@ export default function FileTree({ nodes, selectedPaths, onSelectionChange }: Fi
   };
 
   return (
-    <div className="space-y-3 bg-slate-900/60 border border-slate-800 rounded-2xl p-4 backdrop-blur-xl">
+    <div className="space-y-3 bg-slate-900/60 border border-slate-800 rounded-2xl p-3 sm:p-4 backdrop-blur-xl">
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
         <div className="relative flex-1">
@@ -200,20 +200,20 @@ export default function FileTree({ nodes, selectedPaths, onSelectionChange }: Fi
           />
         </div>
 
-        <div className="flex items-center justify-between sm:justify-end gap-3 text-xs">
+        <div className="flex flex-wrap items-center justify-between sm:justify-end gap-x-3 gap-y-2 text-xs">
           <span className="font-mono text-indigo-300 font-medium">
             {selectedPaths.size} of {allFilePaths.length} selected
           </span>
           <div className="flex gap-1.5">
             <button
               onClick={handleSelectAll}
-              className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors text-xs"
+              className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors text-xs"
             >
               Select All
             </button>
             <button
               onClick={handleClearSelection}
-              className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 transition-colors text-xs"
+              className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 transition-colors text-xs"
             >
               Clear
             </button>
@@ -222,7 +222,7 @@ export default function FileTree({ nodes, selectedPaths, onSelectionChange }: Fi
       </div>
 
       {/* Tree list */}
-      <div className="max-h-[380px] overflow-y-auto space-y-0.5 scrollbar-thin scrollbar-thumb-slate-700 pr-1">
+      <div className="max-h-[50vh] sm:max-h-[380px] overflow-y-auto space-y-0.5 scrollbar-thin scrollbar-thumb-slate-700 pr-1">
         {filteredTree.length === 0 ? (
           <div className="py-8 text-center text-xs text-slate-500">No matching files found.</div>
         ) : (

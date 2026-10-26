@@ -196,15 +196,15 @@ function OptimizerContent() {
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       <Navbar />
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-6 py-10 space-y-8">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-6 sm:space-y-8">
         {/* Page Header */}
-        <div className="flex items-center justify-between border-b border-slate-800 pb-6">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-2xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-lg shadow-indigo-500/10">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5 sm:pb-6">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="p-2.5 sm:p-3 shrink-0 rounded-2xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-lg shadow-indigo-500/10">
               <Zap className="w-7 h-7" />
             </div>
             <div>
-              <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
+              <h1 className="text-lg sm:text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
                 AI Code Optimizer & Refactoring Suite
               </h1>
               <p className="text-xs text-slate-400">
@@ -220,7 +220,7 @@ function OptimizerContent() {
                 setOptimizationId(null);
                 setReport(null);
               }}
-              className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-300 bg-slate-900 border border-slate-800 rounded-xl hover:bg-slate-800 transition-colors"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 shrink-0 text-xs font-bold text-slate-300 bg-slate-900 border border-slate-800 rounded-xl hover:bg-slate-800 transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               New Optimization
@@ -230,7 +230,7 @@ function OptimizerContent() {
 
         {/* STEP 1: INPUT FORM */}
         {step === 'input' && (
-          <div className="max-w-2xl mx-auto bg-slate-900/60 border border-slate-800 rounded-3xl p-8 shadow-2xl backdrop-blur-xl space-y-6">
+          <div className="max-w-2xl mx-auto bg-slate-900/60 border border-slate-800 rounded-3xl p-5 sm:p-8 shadow-2xl backdrop-blur-xl space-y-6">
             <div className="text-center space-y-2">
               <h2 className="text-lg font-bold text-white">Select Repository Source</h2>
               <p className="text-xs text-slate-400">
@@ -239,7 +239,7 @@ function OptimizerContent() {
             </div>
 
             {/* Provider Tabs */}
-            <div className="grid grid-cols-4 gap-2 bg-slate-950 p-1.5 rounded-2xl border border-slate-800">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-950 p-1.5 rounded-2xl border border-slate-800">
               {[
                 { id: 'github', label: 'GitHub', icon: FolderGit2 },
                 { id: 'gitlab', label: 'GitLab', icon: GitBranch },
@@ -306,7 +306,7 @@ function OptimizerContent() {
 
         {/* STEP 2: LOADING */}
         {step === 'loading' && (
-          <div className="max-w-xl mx-auto py-16 text-center space-y-6 bg-slate-900/40 border border-slate-800 rounded-3xl p-8 backdrop-blur-xl">
+          <div className="max-w-xl mx-auto py-10 sm:py-16 text-center space-y-6 bg-slate-900/40 border border-slate-800 rounded-3xl p-5 sm:p-8 backdrop-blur-xl">
             <div className="relative flex justify-center">
               <div className="w-16 h-16 rounded-2xl bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400">
                 <Loader2 className="w-8 h-8 animate-spin" />
@@ -314,7 +314,7 @@ function OptimizerContent() {
             </div>
             <div className="space-y-2">
               <h3 className="text-lg font-bold text-white">Acquiring Repository</h3>
-              <p className="text-xs text-slate-400 font-mono">{loadingStatus}</p>
+              <p className="text-xs text-slate-400 font-mono break-words">{loadingStatus}</p>
             </div>
           </div>
         )}
@@ -322,7 +322,7 @@ function OptimizerContent() {
         {/* STEP 3: FILE SELECTION */}
         {step === 'select-files' && (
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900/60 border border-slate-800 p-6 rounded-3xl backdrop-blur-xl">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-900/60 border border-slate-800 p-4 sm:p-6 rounded-3xl backdrop-blur-xl">
               <div>
                 <h3 className="text-lg font-extrabold text-white flex items-center gap-2">
                   <Code2 className="w-5 h-5 text-indigo-400" />
@@ -333,8 +333,8 @@ function OptimizerContent() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-4">
-                <div className="text-right">
+              <div className="flex flex-col-reverse sm:flex-row sm:items-center gap-3 sm:gap-4">
+                <div className="sm:text-right">
                   <span className="text-xs font-mono text-slate-400 block">Est. Execution Time</span>
                   <span className="text-xs font-bold text-indigo-300 font-mono">
                     ~{Math.max(15, Math.ceil(selectedPaths.size / 5) * 15)} seconds
@@ -344,7 +344,7 @@ function OptimizerContent() {
                 <button
                   onClick={handleAnalyzeSelected}
                   disabled={selectedPaths.size === 0}
-                  className="px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-bold text-xs shadow-xl shadow-indigo-600/30 transition-all flex items-center gap-2"
+                  className="px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-bold text-xs shadow-xl shadow-indigo-600/30 transition-all flex items-center justify-center gap-2"
                 >
                   <span>Analyze {selectedPaths.size} Files</span>
                   <ArrowRight className="w-4 h-4" />
@@ -362,7 +362,7 @@ function OptimizerContent() {
 
         {/* STEP 4: ANALYZING */}
         {step === 'analyzing' && (
-          <div className="max-w-xl mx-auto py-16 text-center space-y-6 bg-slate-900/40 border border-slate-800 rounded-3xl p-8 backdrop-blur-xl">
+          <div className="max-w-xl mx-auto py-10 sm:py-16 text-center space-y-6 bg-slate-900/40 border border-slate-800 rounded-3xl p-5 sm:p-8 backdrop-blur-xl">
             <div className="relative flex justify-center">
               <div className="w-16 h-16 rounded-2xl bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400">
                 <Sparkles className="w-8 h-8 animate-pulse text-indigo-400" />
@@ -381,9 +381,9 @@ function OptimizerContent() {
         {step === 'report' && report && (
           <div className="space-y-8 animate-in fade-in">
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Overall Score */}
-              <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 flex items-center gap-4 backdrop-blur-xl">
+              <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-5 sm:p-6 flex items-center gap-4 backdrop-blur-xl">
                 <div className="relative w-16 h-16 flex items-center justify-center shrink-0">
                   <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                     <path
@@ -414,7 +414,7 @@ function OptimizerContent() {
               </div>
 
               {/* Quick Wins */}
-              <div className="bg-emerald-950/20 border border-emerald-500/30 rounded-3xl p-6 flex items-center justify-between backdrop-blur-xl">
+              <div className="bg-emerald-950/20 border border-emerald-500/30 rounded-3xl p-5 sm:p-6 flex items-center justify-between backdrop-blur-xl">
                 <div>
                   <span className="text-xs font-extrabold text-emerald-400 uppercase tracking-wider">Quick Wins</span>
                   <p className="text-3xl font-extrabold text-white font-mono mt-1">{report.summary.quickWins}</p>
@@ -425,7 +425,7 @@ function OptimizerContent() {
               </div>
 
               {/* Medium Effort */}
-              <div className="bg-amber-950/20 border border-amber-500/30 rounded-3xl p-6 flex items-center justify-between backdrop-blur-xl">
+              <div className="bg-amber-950/20 border border-amber-500/30 rounded-3xl p-5 sm:p-6 flex items-center justify-between backdrop-blur-xl">
                 <div>
                   <span className="text-xs font-extrabold text-amber-400 uppercase tracking-wider">Medium Effort</span>
                   <p className="text-3xl font-extrabold text-white font-mono mt-1">{report.summary.mediumEffort}</p>
@@ -436,7 +436,7 @@ function OptimizerContent() {
               </div>
 
               {/* Refactors */}
-              <div className="bg-rose-950/20 border border-rose-500/30 rounded-3xl p-6 flex items-center justify-between backdrop-blur-xl">
+              <div className="bg-rose-950/20 border border-rose-500/30 rounded-3xl p-5 sm:p-6 flex items-center justify-between backdrop-blur-xl">
                 <div>
                   <span className="text-xs font-extrabold text-rose-400 uppercase tracking-wider">Refactors</span>
                   <p className="text-3xl font-extrabold text-white font-mono mt-1">{report.summary.refactors}</p>
@@ -449,20 +449,20 @@ function OptimizerContent() {
 
             {/* Suggestion Cards */}
             <div className="space-y-6">
-              <h3 className="text-xl font-extrabold text-white flex items-center gap-2">
+              <h3 className="text-lg sm:text-xl font-extrabold text-white flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-indigo-400" />
                 Optimization Suggestions ({sortedSuggestions.length})
               </h3>
 
               {sortedSuggestions.length === 0 ? (
-                <div className="p-12 text-center border border-slate-800 rounded-3xl bg-slate-900/40 text-slate-400">
+                <div className="p-6 sm:p-12 text-center border border-slate-800 rounded-3xl bg-slate-900/40 text-slate-400">
                   No optimization suggestions for the selected files. Code looks clean!
                 </div>
               ) : (
                 sortedSuggestions.map((sug) => (
                   <div
                     key={sug.id}
-                    className="bg-slate-900/60 border border-slate-800/80 rounded-3xl p-6 backdrop-blur-xl space-y-5"
+                    className="bg-slate-900/60 border border-slate-800/80 rounded-3xl p-4 sm:p-6 backdrop-blur-xl space-y-4 sm:space-y-5"
                   >
                     {/* Header line */}
                     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -483,7 +483,7 @@ function OptimizerContent() {
                         </span>
                       </div>
 
-                      <span className="text-xs font-mono text-slate-400">
+                      <span className="text-xs font-mono text-slate-400 break-all">
                         {sug.file} (Lines {sug.start_line}–{sug.end_line})
                       </span>
                     </div>
@@ -496,13 +496,13 @@ function OptimizerContent() {
 
                     {/* Before / After side by side */}
                     {(sug.before_code || sug.after_code) && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-2">
                         {/* BEFORE */}
-                        <div className="space-y-2">
+                        <div className="space-y-2 min-w-0">
                           <span className="text-[11px] font-bold uppercase tracking-wider text-rose-400 block">
                             BEFORE
                           </span>
-                          <div className="rounded-2xl overflow-hidden border border-slate-800 text-xs">
+                          <div className="rounded-2xl overflow-x-auto border border-slate-800 text-xs">
                             <SyntaxHighlighter
                               language="typescript"
                               style={vscDarkPlus}
@@ -514,11 +514,11 @@ function OptimizerContent() {
                         </div>
 
                         {/* AFTER */}
-                        <div className="space-y-2">
+                        <div className="space-y-2 min-w-0">
                           <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400 block">
                             AFTER
                           </span>
-                          <div className="rounded-2xl overflow-hidden border border-slate-800 text-xs">
+                          <div className="rounded-2xl overflow-x-auto border border-slate-800 text-xs">
                             <SyntaxHighlighter
                               language="typescript"
                               style={vscDarkPlus}

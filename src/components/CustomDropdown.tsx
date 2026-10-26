@@ -62,7 +62,7 @@ export function CustomDropdown({
       {/* Floating Popover Menu */}
       {isOpen && (
         <div
-          className={`absolute right-0 z-50 min-w-[200px] w-full rounded-2xl border border-slate-700/80 bg-slate-900/95 p-1.5 shadow-2xl backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150 ${
+          className={`absolute right-0 z-50 min-w-[200px] max-w-[calc(100vw-2rem)] w-full rounded-2xl border border-slate-700/80 bg-slate-900/95 p-1.5 shadow-2xl backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150 ${
             direction === 'up' ? 'bottom-full mb-2 origin-bottom-right' : 'top-full mt-2 origin-top-right'
           }`}
         >

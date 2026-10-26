@@ -73,20 +73,20 @@ export function NewReviewModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl overflow-hidden rounded-3xl border border-slate-700/60 bg-slate-900/90 p-7 shadow-2xl shadow-indigo-950/40 backdrop-blur-2xl">
+    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center overflow-y-auto bg-slate-950/80 backdrop-blur-md p-3 sm:p-4 animate-in fade-in duration-200">
+      <div className="relative w-full max-w-xl my-auto overflow-hidden rounded-3xl border border-slate-700/60 bg-slate-900/90 p-4 sm:p-7 shadow-2xl shadow-indigo-950/40 backdrop-blur-2xl">
         {/* Glow ambient background accent */}
         <div className="absolute -top-24 -right-24 h-48 w-48 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -left-24 h-48 w-48 rounded-full bg-purple-500/10 blur-3xl pointer-events-none" />
 
         {/* Modal Header */}
-        <div className="relative flex items-center justify-between border-b border-slate-800/80 pb-5 mb-6">
+        <div className="relative flex items-center justify-between border-b border-slate-800/80 pb-4 sm:pb-5 mb-5 sm:mb-6">
           <div className="flex items-center gap-3.5">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 text-indigo-400 border border-indigo-500/30 shadow-inner">
+            <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 text-indigo-400 border border-indigo-500/30 shadow-inner">
               <Shield className="h-6 w-6" />
             </div>
             <div>
-              <h2 className="text-xl font-extrabold text-white tracking-tight flex items-center gap-2">
+              <h2 className="text-lg sm:text-xl font-extrabold text-white tracking-tight flex items-center gap-2">
                 Initiate Code Review
               </h2>
               <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
@@ -97,13 +97,13 @@ export function NewReviewModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="relative space-y-6">
+        <form onSubmit={handleSubmit} className="relative space-y-5 sm:space-y-6">
           {/* Provider Selector */}
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
               Repository Provider Source
             </label>
-            <div className="grid grid-cols-4 gap-2.5">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
               {[
                 { id: 'local', label: 'Local Directory', icon: FolderGit2 },
                 { id: 'github', label: 'GitHub', icon: Code2 },
@@ -163,7 +163,7 @@ export function NewReviewModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
           </div>
 
           {/* Revision controls */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
                 Commit SHA (Optional)
@@ -196,7 +196,7 @@ export function NewReviewModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
               <AlertCircle className="h-5 w-5 text-rose-400 shrink-0 mt-0.5" />
               <div className="space-y-1">
                 <p className="font-bold text-rose-300">Invalid Repository or Path</p>
-                <p className="text-slate-200 leading-relaxed font-sans">{validationError}</p>
+                <p className="text-slate-200 leading-relaxed font-sans break-words">{validationError}</p>
                 <p className="text-[11px] text-rose-300/80 font-mono mt-1">
                   Tip: For local repos, use &quot;.&quot; for the current workspace or an existing directory path. For GitHub/GitLab, use &quot;owner/repo&quot; format and ensure the repository is public.
                 </p>
@@ -205,18 +205,18 @@ export function NewReviewModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
           )}
 
           {/* Footer Actions */}
-          <div className="flex items-center justify-end gap-3 pt-5 border-t border-slate-800/80">
+          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-5 border-t border-slate-800/80">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-2xl border border-slate-700/80 bg-slate-800/90 hover:bg-slate-700/90 px-6 py-3 text-xs font-extrabold text-slate-200 hover:text-white transition-all shadow-md hover:border-slate-600 cursor-pointer"
+              className="rounded-2xl border border-slate-700/80 bg-slate-800/90 hover:bg-slate-700/90 px-6 py-3 text-center text-xs font-extrabold text-slate-200 hover:text-white transition-all shadow-md hover:border-slate-600 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-3 text-xs font-extrabold text-white hover:from-indigo-500 hover:to-purple-500 disabled:opacity-50 transition-all shadow-xl shadow-indigo-600/30 cursor-pointer"
+              className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-3 text-xs font-extrabold text-white hover:from-indigo-500 hover:to-purple-500 disabled:opacity-50 transition-all shadow-xl shadow-indigo-600/30 cursor-pointer"
             >
               {isSubmitting ? (
                 <>

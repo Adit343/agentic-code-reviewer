@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -13,6 +13,12 @@ const jetbrainsMono = JetBrains_Mono({
   variable: '--font-mono',
   subsets: ['latin'],
 });
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#020617',
+};
 
 export const metadata: Metadata = {
   title: 'Agentic Code Reviewer — Security-Focused AI Code Review & SAST Platform',
@@ -32,7 +38,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased bg-slate-950 text-slate-100`}>
+      <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased bg-slate-950 text-slate-100 overflow-x-hidden`}>
         {children}
         <ToastContainer
           position="bottom-right"

@@ -67,8 +67,8 @@ export function ApiSpecsModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 overflow-y-auto animate-in fade-in duration-200">
-      <div className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl border border-slate-700/60 bg-slate-900/95 p-7 shadow-2xl backdrop-blur-2xl space-y-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+      <div className="relative w-full max-w-3xl max-h-[92dvh] overflow-y-auto rounded-3xl border border-slate-700/60 bg-slate-900/95 p-4 sm:p-7 shadow-2xl backdrop-blur-2xl space-y-6">
         {/* Glow ambient background accent */}
         <div className="absolute top-0 right-0 h-48 w-48 rounded-full bg-purple-500/10 blur-3xl pointer-events-none" />
 
@@ -95,8 +95,8 @@ export function ApiSpecsModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
         <div className="space-y-4">
           {ENDPOINTS.map((ep, idx) => (
             <div key={idx} className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 font-mono text-xs font-bold">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-3 font-mono text-xs font-bold">
                   <span
                     className={`px-2.5 py-1 rounded-lg uppercase ${
                       ep.method === 'POST'
@@ -108,12 +108,12 @@ export function ApiSpecsModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
                   >
                     {ep.method}
                   </span>
-                  <span className="text-white text-sm">{ep.path}</span>
+                  <span className="text-white text-sm break-all">{ep.path}</span>
                 </div>
 
                 <button
                   onClick={() => handleCopy(ep.curl, idx)}
-                  className="flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:border-slate-700 transition-colors"
+                  className="flex w-fit items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:border-slate-700 transition-colors"
                 >
                   {copiedIndex === idx ? (
                     <>
@@ -136,7 +136,7 @@ export function ApiSpecsModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
                   <span className="text-slate-500 block mb-1 font-sans font-bold text-[10px] uppercase">
                     Request Payload Schema:
                   </span>
-                  <pre>{ep.payload}</pre>
+                  <pre className="overflow-x-auto">{ep.payload}</pre>
                 </div>
               )}
             </div>

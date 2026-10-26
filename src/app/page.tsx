@@ -111,20 +111,20 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-indigo-500/30 selection:text-indigo-200">
       <Navbar />
 
-      <main className="flex-1 max-w-[90rem] w-full mx-auto px-8 py-10 space-y-10">
+      <main className="flex-1 max-w-[90rem] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-6 sm:space-y-10">
         {/* Glassmorphic Hero Banner */}
-        <div className="relative overflow-hidden rounded-3xl border border-slate-700/60 bg-gradient-to-br from-slate-900/90 via-slate-900/60 to-indigo-950/30 p-8 md:p-10 shadow-2xl backdrop-blur-2xl">
+        <div className="relative overflow-hidden rounded-3xl border border-slate-700/60 bg-gradient-to-br from-slate-900/90 via-slate-900/60 to-indigo-950/30 p-5 sm:p-8 md:p-10 shadow-2xl backdrop-blur-2xl">
           {/* Ambient Glows */}
           <div className="absolute top-0 right-0 -mr-16 -mt-16 h-72 w-72 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 -ml-16 -mb-16 h-72 w-72 rounded-full bg-purple-500/10 blur-3xl pointer-events-none" />
 
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
-            <div className="space-y-4 max-w-2xl">
-              <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-indigo-500/15 to-purple-500/15 px-4 py-1.5 text-xs font-bold text-indigo-300 border border-indigo-500/30 shadow-inner">
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6 md:gap-8">
+            <div className="space-y-3 sm:space-y-4 max-w-2xl min-w-0">
+              <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-indigo-500/15 to-purple-500/15 px-3 sm:px-4 py-1.5 text-[10px] sm:text-xs font-bold text-indigo-300 border border-indigo-500/30 shadow-inner">
                 <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
                 SECURITY-FOCUSED AGENTIC PLATFORM
               </span>
-              <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl leading-tight">
+              <h2 className="text-2xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl leading-tight">
                 Full-Codebase & Commit-Aware Code Review
               </h2>
               <p className="text-sm text-slate-300 leading-relaxed font-normal">
@@ -134,7 +134,7 @@ export default function DashboardPage() {
 
             <button
               onClick={() => setIsModalOpen(true)}
-              className="group relative flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 px-7 py-4 text-sm font-bold text-white shadow-2xl shadow-indigo-600/30 hover:from-indigo-500 hover:to-purple-500 transition-all hover:scale-[1.03] active:scale-95 cursor-pointer"
+              className="group relative flex w-full md:w-auto shrink-0 items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 px-7 py-3.5 sm:py-4 text-sm font-bold text-white shadow-2xl shadow-indigo-600/30 hover:from-indigo-500 hover:to-purple-500 transition-all hover:scale-[1.03] active:scale-95 cursor-pointer"
             >
               <Play className="h-4 w-4 fill-current transition-transform group-hover:scale-110" />
               Start New Review
@@ -144,43 +144,43 @@ export default function DashboardPage() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="relative overflow-hidden rounded-3xl border border-slate-800/80 bg-slate-900/50 p-6 backdrop-blur-xl transition-all hover:border-slate-700">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+          <div className="relative overflow-hidden rounded-3xl border border-slate-800/80 bg-slate-900/50 p-5 sm:p-6 backdrop-blur-xl transition-all hover:border-slate-700">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Total Reviews Run</span>
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                 <Terminal className="h-5 w-5" />
               </div>
             </div>
-            <p className="text-4xl font-extrabold text-white mt-4 font-mono">{totalReviews}</p>
+            <p className="text-3xl sm:text-4xl font-extrabold text-white mt-4 font-mono">{totalReviews}</p>
           </div>
 
-          <div className="relative overflow-hidden rounded-3xl border border-slate-800/80 bg-slate-900/50 p-6 backdrop-blur-xl transition-all hover:border-slate-700">
+          <div className="relative overflow-hidden rounded-3xl border border-slate-800/80 bg-slate-900/50 p-5 sm:p-6 backdrop-blur-xl transition-all hover:border-slate-700">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Completed Reports</span>
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                 <CheckCircle2 className="h-5 w-5" />
               </div>
             </div>
-            <p className="text-4xl font-extrabold text-emerald-400 mt-4 font-mono">{completedReviews}</p>
+            <p className="text-3xl sm:text-4xl font-extrabold text-emerald-400 mt-4 font-mono">{completedReviews}</p>
           </div>
 
-          <div className="relative overflow-hidden rounded-3xl border border-slate-800/80 bg-slate-900/50 p-6 backdrop-blur-xl transition-all hover:border-slate-700">
+          <div className="relative overflow-hidden rounded-3xl border border-slate-800/80 bg-slate-900/50 p-5 sm:p-6 backdrop-blur-xl transition-all hover:border-slate-700">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Verified Findings</span>
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
                 <ShieldAlert className="h-5 w-5" />
               </div>
             </div>
-            <p className="text-4xl font-extrabold text-rose-400 mt-4 font-mono">{totalFindingsCount}</p>
+            <p className="text-3xl sm:text-4xl font-extrabold text-rose-400 mt-4 font-mono">{totalFindingsCount}</p>
           </div>
         </div>
 
         {/* Reviews Dashboard List */}
-        <div className="rounded-3xl border border-slate-800/80 bg-slate-900/50 p-7 backdrop-blur-xl shadow-2xl space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="rounded-3xl border border-slate-800/80 bg-slate-900/50 p-4 sm:p-7 backdrop-blur-xl shadow-2xl space-y-5 sm:space-y-6">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div>
-              <h3 className="text-xl font-extrabold text-white flex items-center gap-2.5">
+              <h3 className="text-lg sm:text-xl font-extrabold text-white flex items-center gap-2.5">
                 <GitBranch className="h-5 w-5 text-indigo-400" />
                 Repository Audit Jobs ({filteredReviews.length})
               </h3>
@@ -188,8 +188,8 @@ export default function DashboardPage() {
             </div>
 
             {/* Controls */}
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="relative min-w-[240px]">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full lg:w-auto">
+              <div className="relative w-full sm:w-64">
                 <Search className="h-4 w-4 absolute left-3.5 top-3 text-slate-400" />
                 <input
                   type="text"
@@ -205,15 +205,15 @@ export default function DashboardPage() {
                 options={statusOptions}
                 value={statusFilter}
                 onChange={setStatusFilter}
-                className="min-w-[160px]"
+                className="w-full sm:w-44"
               />
             </div>
           </div>
 
           {loading ? (
-            <div className="p-12 text-center text-sm font-semibold text-slate-500">Loading audit history...</div>
+            <div className="p-8 sm:p-12 text-center text-sm font-semibold text-slate-500">Loading audit history...</div>
           ) : filteredReviews.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-800 p-12 text-center space-y-4">
+            <div className="rounded-2xl border border-dashed border-slate-800 p-6 sm:p-12 text-center space-y-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-800/60 text-slate-500 mx-auto">
                 <Cpu className="h-6 w-6" />
               </div>
@@ -236,11 +236,11 @@ export default function DashboardPage() {
                 {paginatedReviews.map((rev) => (
                   <div
                     key={rev.id}
-                    className="group flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-2xl border border-slate-800/80 bg-slate-950/40 hover:bg-slate-800/40 hover:border-indigo-500/30 transition-all duration-200 gap-4"
+                    className="group flex flex-col lg:flex-row lg:items-center justify-between p-4 sm:p-5 rounded-2xl border border-slate-800/80 bg-slate-950/40 hover:bg-slate-800/40 hover:border-indigo-500/30 transition-all duration-200 gap-4"
                   >
-                    <div className="space-y-1.5">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <span className="font-mono text-sm font-extrabold text-white group-hover:text-indigo-300 transition-colors">
+                    <div className="space-y-1.5 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                        <span className="font-mono text-sm font-extrabold text-white group-hover:text-indigo-300 transition-colors break-all">
                           {rev.repositorySource}
                         </span>
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300 uppercase">
@@ -256,13 +256,13 @@ export default function DashboardPage() {
                           <span>{rev.error}</span>
                         </p>
                       ) : (
-                        <p className="text-xs text-slate-400 font-mono">{rev.currentPhase}</p>
+                        <p className="text-xs text-slate-400 font-mono break-words">{rev.currentPhase}</p>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-wrap items-center justify-between lg:justify-end gap-3 sm:gap-4 shrink-0">
                       <span
-                        className={`px-3.5 py-1.5 rounded-full text-xs font-extrabold shadow-sm ${
+                        className={`px-3 sm:px-3.5 py-1.5 whitespace-nowrap rounded-full text-xs font-extrabold shadow-sm ${
                           rev.status === 'completed'
                             ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
                             : rev.status === 'failed'
@@ -286,8 +286,8 @@ export default function DashboardPage() {
               </div>
 
               {/* Jobs Pagination & Custom Items Per Page Dropdown */}
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-3 border-t border-slate-800/80 px-2">
-                <div className="flex items-center gap-3">
+              <div className="flex flex-col lg:flex-row items-center justify-between gap-4 pt-3 border-t border-slate-800/80 px-0 sm:px-2">
+                <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
                   <span className="text-xs font-semibold text-slate-400 flex items-center gap-1.5">
                     <Layers className="h-3.5 w-3.5 text-indigo-400" />
                     Items per page:
@@ -305,7 +305,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Page Number Buttons */}
-                <div className="flex items-center gap-1.5">
+                <div className="flex flex-wrap items-center justify-center gap-1.5">
                   <button
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
@@ -320,7 +320,7 @@ export default function DashboardPage() {
                       key={idx}
                       disabled={pg === '...'}
                       onClick={() => typeof pg === 'number' && setCurrentPage(pg)}
-                      className={`h-7 w-7 rounded-xl text-xs font-bold transition-all flex items-center justify-center ${
+                      className={`h-8 w-8 sm:h-7 sm:w-7 rounded-xl text-xs font-bold transition-all flex items-center justify-center ${
                         currentPage === pg
                           ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20 scale-105 border border-indigo-400/30'
                           : pg === '...'

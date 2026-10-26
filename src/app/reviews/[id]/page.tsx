@@ -33,6 +33,15 @@ import Link from 'next/link';
 
 import { ExportDropdown } from '@/components/ExportDropdown';
 
+const severityBadgeClass = (severity: Finding['severity']) =>
+  severity === 'critical'
+    ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+    : severity === 'high'
+    ? 'bg-orange-500/20 text-orange-300 border-orange-500/40'
+    : severity === 'medium'
+    ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+    : 'bg-blue-500/20 text-blue-300 border-blue-500/40';
+
 export default function ReviewDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: reviewId } = use(params);
 
@@ -208,32 +217,33 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-indigo-500/30 selection:text-indigo-200">
       <Navbar />
 
-      <main className="flex-1 max-w-[90rem] w-full mx-auto px-8 py-8 space-y-8 transform-gpu">
+      <main className="flex-1 max-w-[90rem] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8 transform-gpu">
         {/* Back Link & Title Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             <Link
               href="/"
-              className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-800 bg-slate-900 text-slate-400 hover:text-white hover:border-slate-700 transition-colors shadow-md hover:scale-105"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-800 bg-slate-900 text-slate-400 hover:text-white hover:border-slate-700 transition-colors shadow-md hover:scale-105"
             >
               <ArrowLeft className="h-5 w-5" />
             </Link>
-            <div>
-              <div className="flex items-center gap-3">
-                <h2 className="text-2xl font-extrabold text-white tracking-tight">{review?.repositorySource || 'Loading Repository...'}</h2>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight break-all">{review?.repositorySource || 'Loading Repository...'}</h2>
                 {review && (
                   <span className="text-xs font-mono px-3 py-1 rounded-full bg-slate-900 text-indigo-300 border border-indigo-500/30 shadow-inner">
                     {review.commitSha.slice(0, 8)}
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-400 font-mono mt-1">Review Job Ref: {reviewId}</p>
+              <p className="text-xs text-slate-400 font-mono mt-1 break-all">Review Job Ref: {reviewId}</p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="grid grid-cols-1 sm:flex sm:flex-wrap items-center gap-3">
             {review && (
               <ExportDropdown
+                className="max-lg:hidden"
                 findings={filteredFindings}
                 repoName={review.repositorySource}
                 commitSha={review.commitSha}
@@ -275,14 +285,14 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
 
         {/* Failed Review Friendly Alert Card */}
         {review?.status === 'failed' && (
-          <div className="relative overflow-hidden rounded-3xl border border-rose-500/40 bg-gradient-to-br from-rose-950/60 via-slate-900/90 to-rose-950/30 p-6 md:p-8 backdrop-blur-2xl shadow-2xl animate-in fade-in">
+          <div className="relative overflow-hidden rounded-3xl border border-rose-500/40 bg-gradient-to-br from-rose-950/60 via-slate-900/90 to-rose-950/30 p-4 sm:p-6 md:p-8 backdrop-blur-2xl shadow-2xl animate-in fade-in">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-              <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/40 shadow-inner">
+              <div className="flex items-start gap-3 sm:gap-4 min-w-0">
+                <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/40 shadow-inner">
                   <AlertTriangle className="h-6 w-6" />
                 </div>
-                <div className="space-y-1.5">
-                  <h3 className="text-lg font-extrabold text-white flex items-center gap-2">
+                <div className="space-y-1.5 min-w-0">
+                  <h3 className="text-base sm:text-lg font-extrabold text-white flex items-center gap-2">
                     Review Pipeline Failed
                   </h3>
                   <p className="text-sm text-rose-200 font-medium leading-relaxed">
@@ -299,10 +309,10 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 shrink-0">
+              <div className="flex items-center gap-3 shrink-0 w-full md:w-auto">
                 <Link
                   href="/"
-                  className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 px-5 py-3 text-xs font-bold text-white shadow-xl shadow-indigo-600/30 hover:from-indigo-500 hover:to-purple-500 transition-all cursor-pointer"
+                  className="flex w-full md:w-auto items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 px-5 py-3 text-xs font-bold text-white shadow-xl shadow-indigo-600/30 hover:from-indigo-500 hover:to-purple-500 transition-all cursor-pointer"
                 >
                   <RotateCcw className="h-4 w-4" />
                   Try Another Repository
@@ -313,40 +323,40 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
         )}
 
         {/* Summary Cards Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
           <div className="flex flex-col items-center justify-center text-center rounded-3xl border border-rose-500/30 bg-rose-500/10 p-5 shadow-lg backdrop-blur-xl transform-gpu">
             <span className="text-xs font-extrabold uppercase tracking-wider text-rose-400">Critical Risk</span>
-            <p className="text-3xl font-extrabold text-white mt-2 font-mono">{review?.summary?.severityCounts.critical ?? 0}</p>
+            <p className="text-2xl sm:text-3xl font-extrabold text-white mt-2 font-mono">{review?.summary?.severityCounts.critical ?? 0}</p>
           </div>
 
           <div className="flex flex-col items-center justify-center text-center rounded-3xl border border-orange-500/30 bg-orange-500/10 p-5 shadow-lg backdrop-blur-xl transform-gpu">
             <span className="text-xs font-extrabold uppercase tracking-wider text-orange-400">High Risk</span>
-            <p className="text-3xl font-extrabold text-white mt-2 font-mono">{review?.summary?.severityCounts.high ?? 0}</p>
+            <p className="text-2xl sm:text-3xl font-extrabold text-white mt-2 font-mono">{review?.summary?.severityCounts.high ?? 0}</p>
           </div>
 
           <div className="flex flex-col items-center justify-center text-center rounded-3xl border border-amber-500/30 bg-amber-500/10 p-5 shadow-lg backdrop-blur-xl transform-gpu">
             <span className="text-xs font-extrabold uppercase tracking-wider text-amber-400">Medium Risk</span>
-            <p className="text-3xl font-extrabold text-white mt-2 font-mono">{review?.summary?.severityCounts.medium ?? 0}</p>
+            <p className="text-2xl sm:text-3xl font-extrabold text-white mt-2 font-mono">{review?.summary?.severityCounts.medium ?? 0}</p>
           </div>
 
           <div className="flex flex-col items-center justify-center text-center rounded-3xl border border-blue-500/30 bg-blue-500/10 p-5 shadow-lg backdrop-blur-xl transform-gpu">
             <span className="text-xs font-extrabold uppercase tracking-wider text-blue-400">Low / Quality</span>
-            <p className="text-3xl font-extrabold text-white mt-2 font-mono">
+            <p className="text-2xl sm:text-3xl font-extrabold text-white mt-2 font-mono">
               {(review?.summary?.severityCounts.low ?? 0) + (review?.summary?.severityCounts.info ?? 0)}
             </p>
           </div>
 
-          <div className="flex flex-col items-center justify-center text-center rounded-3xl border border-indigo-500/30 bg-indigo-500/10 p-5 shadow-lg backdrop-blur-xl transform-gpu">
+          <div className="flex flex-col items-center justify-center text-center col-span-2 md:col-span-1 rounded-3xl border border-indigo-500/30 bg-indigo-500/10 p-5 shadow-lg backdrop-blur-xl transform-gpu">
             <span className="text-xs font-extrabold uppercase tracking-wider text-indigo-400">Files Affected</span>
-            <p className="text-3xl font-extrabold text-white mt-2 font-mono">{review?.summary?.filesAffected ?? 0}</p>
+            <p className="text-2xl sm:text-3xl font-extrabold text-white mt-2 font-mono">{review?.summary?.filesAffected ?? 0}</p>
           </div>
         </div>
 
         {/* Findings Dashboard Section */}
-        <div className="rounded-3xl border border-slate-800/80 bg-slate-900/50 p-7 backdrop-blur-xl shadow-2xl space-y-6 transform-gpu">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="rounded-3xl border border-slate-800/80 bg-slate-900/50 p-4 sm:p-7 backdrop-blur-xl shadow-2xl space-y-5 sm:space-y-6 transform-gpu">
+          <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
             <div>
-              <h3 className="text-xl font-extrabold text-white flex items-center gap-2.5">
+              <h3 className="text-lg sm:text-xl font-extrabold text-white flex items-center gap-2.5">
                 <ShieldAlert className="h-5 w-5 text-indigo-400" />
                 Verified & Candidate Findings ({filteredFindings.length})
               </h3>
@@ -356,13 +366,13 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
             </div>
 
             {/* Filter controls */}
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="grid grid-cols-1 sm:flex sm:flex-wrap items-center gap-3">
               {review && (
                 <button
                   disabled={fixableFindings.length === 0}
                   onClick={() => setFixTargets(fixableFindings)}
                   title={fixableFindings.length === 0 ? 'No automated fixes available for the current filter' : 'Apply every available fix in the current list'}
-                  className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-emerald-600/20 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                  className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-emerald-600/20 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                 >
                   <Wrench className="h-4 w-4" />
                   Apply all fixes ({fixableFindings.length})
@@ -377,7 +387,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
               )}
 
               {/* Search Bar */}
-              <div className="relative min-w-[240px]">
+              <div className="relative w-full sm:w-64">
                 <Search className="h-4 w-4 absolute left-3.5 top-3 text-slate-400" />
                 <input
                   type="text"
@@ -393,7 +403,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
                 options={severityOptions}
                 value={severityFilter}
                 onChange={setSeverityFilter}
-                className="min-w-[170px]"
+                className="w-full sm:w-44"
               />
 
               {/* Category Dropdown */}
@@ -401,7 +411,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
                 options={categoryOptions}
                 value={categoryFilter}
                 onChange={setCategoryFilter}
-                className="min-w-[180px]"
+                className="w-full sm:w-48"
               />
             </div>
           </div>
@@ -430,7 +440,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
 
           {/* Active Pipeline Loading State vs Completed Findings Table */}
           {isPipelineActive && filteredFindings.length === 0 ? (
-            <div className="rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-950/40 via-slate-950 to-purple-950/40 p-10 text-center space-y-6 shadow-2xl relative overflow-hidden">
+            <div className="rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-950/40 via-slate-950 to-purple-950/40 p-5 sm:p-10 text-center space-y-6 shadow-2xl relative overflow-hidden">
               <div className="absolute top-0 right-0 -mr-16 -mt-16 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
               <div className="absolute bottom-0 left-0 -ml-16 -mb-16 h-64 w-64 rounded-full bg-purple-500/10 blur-3xl pointer-events-none" />
 
@@ -445,7 +455,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
                     <Sparkles className="h-4 w-4 text-indigo-400" />
                     Review Pipeline Actively Analyzing Repository
                   </h4>
-                  <p className="text-xs font-mono text-indigo-300 bg-indigo-950/80 px-3.5 py-1 rounded-full border border-indigo-500/30 inline-block shadow-inner">
+                  <p className="text-xs font-mono text-indigo-300 bg-indigo-950/80 px-3.5 py-1 rounded-2xl border border-indigo-500/30 inline-block shadow-inner break-words max-w-full">
                     Current Stage: {review?.currentPhase || 'Initializing scanners & parsing AST...'}
                   </p>
                   <p className="text-[12px] text-slate-400 pt-1 leading-relaxed">
@@ -463,17 +473,17 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
                   >
                     <div className="flex items-center gap-3">
                       <div className="h-5 w-16 rounded-full bg-slate-800" />
-                      <div className="h-4 w-48 rounded bg-slate-800" />
+                      <div className="h-4 w-24 sm:w-48 rounded bg-slate-800" />
                     </div>
-                    <div className="h-4 w-32 rounded bg-slate-800" />
-                    <div className="h-7 w-24 rounded-xl bg-slate-800" />
+                    <div className="hidden sm:block h-4 w-32 rounded bg-slate-800" />
+                    <div className="hidden sm:block h-7 w-24 rounded-xl bg-slate-800" />
                   </div>
                 ))}
               </div>
             </div>
           ) : filteredFindings.length === 0 ? (
             searchFilter || severityFilter !== 'all' || categoryFilter !== 'all' ? (
-              <div className="p-12 text-center space-y-4 border border-dashed border-slate-800 rounded-2xl bg-slate-950/40">
+              <div className="p-6 sm:p-12 text-center space-y-4 border border-dashed border-slate-800 rounded-2xl bg-slate-950/40">
                 <p className="text-sm font-semibold text-slate-400">No findings match selected search query or filters.</p>
                 <button
                   onClick={() => {
@@ -488,7 +498,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
                 </button>
               </div>
             ) : (
-              <div className="p-12 text-center space-y-3 border border-emerald-500/30 bg-gradient-to-b from-emerald-500/10 to-slate-950/60 rounded-2xl shadow-xl">
+              <div className="p-6 sm:p-12 text-center space-y-3 border border-emerald-500/30 bg-gradient-to-b from-emerald-500/10 to-slate-950/60 rounded-2xl shadow-xl">
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 mx-auto shadow-lg shadow-emerald-500/20">
                   <ShieldCheck className="h-8 w-8" />
                 </div>
@@ -500,7 +510,59 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
             )
           ) : (
             <div className="space-y-4">
-              <div className="overflow-x-auto rounded-2xl border border-slate-800/80">
+              {/* Mobile / tablet card list */}
+              <div className="space-y-3 lg:hidden">
+                {paginatedFindings.map((f) => (
+                  <div
+                    key={f.id}
+                    onClick={() => setSelectedFinding(f)}
+                    className="rounded-2xl border border-slate-800/80 bg-slate-950/40 p-4 space-y-3 active:bg-slate-800/50 cursor-pointer"
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider border ${severityBadgeClass(f.severity)}`}>
+                        {f.severity}
+                      </span>
+                      <span className="text-[11px] font-bold text-slate-300 capitalize">{f.category}</span>
+                      <span className="ml-auto font-mono text-xs font-bold text-indigo-400">{(f.confidence * 100).toFixed(0)}%</span>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm font-bold text-white leading-snug">{f.title}</p>
+                      <p className="text-[10px] font-mono text-slate-500 break-all">{f.rule}</p>
+                      <p className="text-xs font-mono text-slate-300 break-all">{f.file}:{f.start_line}</p>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300 uppercase border border-slate-700">
+                        {f.status}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {isFixable(f) && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setFixTargets([f]);
+                            }}
+                            className="rounded-xl bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 px-3.5 py-2 text-xs font-bold hover:bg-emerald-600 hover:text-white transition-colors cursor-pointer"
+                          >
+                            Fix
+                          </button>
+                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedFinding(f);
+                          }}
+                          className="rounded-xl bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 px-3.5 py-2 text-xs font-bold hover:bg-indigo-600 hover:text-white transition-colors"
+                        >
+                          Inspect Evidence
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop table */}
+              <div className="hidden lg:block overflow-x-auto rounded-2xl border border-slate-800/80">
                 <table className="w-full text-left text-xs">
                   <thead className="border-b border-slate-800 bg-slate-950/80 text-slate-400 font-extrabold uppercase tracking-wider">
                     <tr>
@@ -578,9 +640,9 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
               </div>
 
               {/* Items Per Page Selector & Direct Page Number Pagination */}
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-3 border-t border-slate-800/80 px-2">
+              <div className="flex flex-col lg:flex-row items-center justify-between gap-4 pt-3 border-t border-slate-800/80 px-0 sm:px-2">
                 {/* Items Per Page Control */}
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
                   <span className="text-xs font-semibold text-slate-400 flex items-center gap-1.5">
                     <Layers className="h-3.5 w-3.5 text-indigo-400" />
                     Items per page:
@@ -599,7 +661,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
                 </div>
 
                 {/* Page Number Buttons & Prev/Next Controls */}
-                <div className="flex items-center gap-1.5">
+                <div className="flex flex-wrap items-center justify-center gap-1.5">
                   <button
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
@@ -615,7 +677,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
                       key={idx}
                       disabled={pg === '...'}
                       onClick={() => typeof pg === 'number' && setCurrentPage(pg)}
-                      className={`h-7 w-7 rounded-xl text-xs font-bold transition-colors flex items-center justify-center ${
+                      className={`h-8 w-8 sm:h-7 sm:w-7 rounded-xl text-xs font-bold transition-colors flex items-center justify-center ${
                         currentPage === pg
                           ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20 border border-indigo-400/30'
                           : pg === '...'

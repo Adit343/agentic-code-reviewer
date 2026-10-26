@@ -73,14 +73,14 @@ export function FindingDetailModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 sm:p-6 animate-in fade-in duration-200">
-      <div className="relative w-full max-w-4xl max-h-[85vh] sm:max-h-[90vh] flex flex-col rounded-3xl border border-slate-700/60 bg-slate-900/95 shadow-2xl backdrop-blur-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-2 sm:p-6 animate-in fade-in duration-200">
+      <div className="relative w-full max-w-4xl max-h-[92dvh] sm:max-h-[90vh] flex flex-col rounded-3xl border border-slate-700/60 bg-slate-900/95 shadow-2xl backdrop-blur-2xl overflow-hidden">
         {/* Glow backdrop */}
         <div className="absolute top-0 right-0 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
 
         {/* Fixed Modal Header */}
-        <div className="relative flex items-start justify-between border-b border-slate-800/80 p-6 sm:p-7 pb-5 shrink-0 bg-slate-900/80 backdrop-blur-xl z-10">
-          <div className="space-y-3 max-w-2xl">
+        <div className="relative flex items-start justify-between gap-3 border-b border-slate-800/80 p-4 sm:p-7 sm:pb-5 shrink-0 bg-slate-900/80 backdrop-blur-xl z-10">
+          <div className="space-y-3 max-w-2xl min-w-0">
             <div className="flex flex-wrap items-center gap-2.5">
               <span className={`px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider border shadow-md ${getSeverityBadge(finding.severity)}`}>
                 {finding.severity}
@@ -97,10 +97,10 @@ export function FindingDetailModal({
                 </span>
               )}
             </div>
-            <h2 className="text-2xl font-extrabold text-white tracking-tight">{finding.title}</h2>
-            <div className="flex items-center gap-2 text-xs font-mono text-slate-400 bg-slate-950/60 px-3 py-1.5 rounded-xl border border-slate-800 w-fit">
-              <FileCode className="h-4 w-4 text-indigo-400" />
-              <span>
+            <h2 className="text-lg sm:text-2xl font-extrabold text-white tracking-tight break-words">{finding.title}</h2>
+            <div className="flex items-center gap-2 text-xs font-mono text-slate-400 bg-slate-950/60 px-3 py-1.5 rounded-xl border border-slate-800 max-w-full">
+              <FileCode className="h-4 w-4 shrink-0 text-indigo-400" />
+              <span className="break-all">
                 {finding.file}:{finding.start_line}-{finding.end_line}
               </span>
             </div>
@@ -108,7 +108,7 @@ export function FindingDetailModal({
 
           <button
             onClick={onClose}
-            className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-800/80 text-slate-400 hover:bg-slate-700 hover:text-white transition-all shadow-md cursor-pointer shrink-0"
+            className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-slate-800/80 text-slate-400 hover:bg-slate-700 hover:text-white transition-all shadow-md cursor-pointer shrink-0"
             title="Close Inspector"
           >
             <X className="h-6 w-6" />
@@ -116,7 +116,7 @@ export function FindingDetailModal({
         </div>
 
         {/* Scrollable Modal Body */}
-        <div className="flex-1 overflow-y-auto p-6 sm:p-7 pr-4 sm:pr-6 space-y-6 z-0">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-7 space-y-5 sm:space-y-6 z-0">
           {/* Code Snippet Box */}
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -172,7 +172,7 @@ export function FindingDetailModal({
               <ShieldCheck className="h-4 w-4 text-indigo-400" />
               Verification Agent Counter-Evidence Audit Trail
             </h4>
-            <div className="space-y-1.5 text-xs text-slate-300 font-mono">
+            <div className="space-y-1.5 text-xs text-slate-300 font-mono break-words">
               <div>
                 <span className="text-slate-400">Checks Performed: </span>
                 <span className="text-indigo-300 font-semibold">{finding.verification.checks_performed.join(', ') || 'Static & AI verification'}</span>
@@ -194,7 +194,7 @@ export function FindingDetailModal({
               <Sparkles className="h-4 w-4 text-emerald-400" />
               Remediation Guidance
             </h4>
-            <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 font-mono text-xs text-emerald-300 shadow-inner">
+            <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 font-mono text-xs text-emerald-300 shadow-inner break-words whitespace-pre-wrap">
               {finding.recommended_fix}
             </div>
             {finding.fix && finding.status !== 'fixed' && onRequestFix && (
@@ -210,15 +210,15 @@ export function FindingDetailModal({
         </div>
 
         {/* Fixed Footer Actions */}
-        <div className="relative flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-800/80 p-5 sm:px-7 shrink-0 bg-slate-900/90 backdrop-blur-xl z-10">
-          <div className="flex items-center gap-2">
+        <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-800/80 p-4 sm:px-7 shrink-0 bg-slate-900/90 backdrop-blur-xl z-10">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-bold text-slate-400">Mark Status:</span>
             {(['confirmed', 'accepted', 'false_positive', 'fixed'] as Finding['status'][]).map((st) => (
               <button
                 key={st}
                 disabled={updating}
                 onClick={() => handleStatusUpdate(st)}
-                className={`rounded-xl px-3.5 py-1.5 text-xs font-bold capitalize border transition-all cursor-pointer ${
+                className={`rounded-xl px-3.5 py-2 sm:py-1.5 text-xs font-bold capitalize border transition-all cursor-pointer ${
                   finding.status === st
                     ? 'border-indigo-500 bg-indigo-500/20 text-indigo-300 shadow-md shadow-indigo-500/10'
                     : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700 hover:text-white'
