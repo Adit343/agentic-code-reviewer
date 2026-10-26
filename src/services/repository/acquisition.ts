@@ -252,6 +252,18 @@ export async function acquireRepository(
       throw new Error(`Local path "${source}" is a file, not a directory. Please provide a folder path containing your project.`);
     }
 
+    // The isolated copy below excludes .git, so branch/commit must be read from the real folder.
+    let sourceBranch: string | undefined;
+    try {
+      const sourceGit = simpleGit({ baseDir: canonicalPath });
+      if (await sourceGit.checkIsRepo()) {
+        const name = (await sourceGit.revparse(['--abbrev-ref', 'HEAD'])).trim();
+        if (name && name !== 'HEAD') sourceBranch = name; // 'HEAD' means detached
+      }
+    } catch {
+      // not a git repo or git unavailable — branch stays unknown
+    }
+
     // Copy repository contents into isolated workspace
     await fs.cp(canonicalPath, destinationWorkspace, {
       recursive: true,
@@ -322,7 +334,7 @@ export async function acquireRepository(
       workspacePath: destinationWorkspace,
       commitSha: commitSha.slice(0, 40),
       parentSha,
-      branch,
+      branch: sourceBranch || branch,
       filesCount: 0,
     };
   } else {
@@ -390,10 +402,19 @@ export async function acquireRepository(
       }
     }
 
+    let branch: string | undefined;
+    try {
+      branch = (await workspaceGit.revparse(['--abbrev-ref', 'HEAD'])).trim() || undefined;
+      if (branch === 'HEAD') branch = undefined; // detached
+    } catch {
+      // branch is informational only
+    }
+
     return {
       workspacePath: destinationWorkspace,
       commitSha,
       parentSha,
+      branch,
       filesCount: 0,
     };
   }

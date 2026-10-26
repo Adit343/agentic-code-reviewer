@@ -15,6 +15,7 @@ import {
   runDependencyAgent,
   runVerificationAgent,
 } from './llmProvider';
+import { runFixGeneration } from './fixAgent';
 import { storage } from '@/lib/storage';
 
 export async function executeReviewPipeline(
@@ -49,6 +50,7 @@ export async function executeReviewPipeline(
       currentPhase: 'Capturing repository snapshot and indexing code...',
       commitSha: acqResult.commitSha,
       parentSha: acqResult.parentSha,
+      branch: acqResult.branch,
     });
 
     const fileInventory = await discoverWorkspaceFiles(workspace.path);
@@ -154,6 +156,9 @@ export async function executeReviewPipeline(
       summary,
       completedAt: new Date().toISOString(),
     });
+
+    // Fixes are generated in the background so the report is available immediately.
+    void runFixGeneration(reviewId);
 
     return state;
   } catch (err: any) {

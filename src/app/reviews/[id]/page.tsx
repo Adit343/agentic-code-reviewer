@@ -5,6 +5,7 @@ import { Navbar } from '@/components/Navbar';
 import { ReviewProgress } from '@/components/ReviewProgress';
 import { FindingDetailModal } from '@/components/FindingDetailModal';
 import ChatPanel from '@/components/ChatPanel';
+import { ApplyFixesModal } from '@/components/ApplyFixesModal';
 import { CustomDropdown, DropdownOption } from '@/components/CustomDropdown';
 import { Review, Finding } from '@/types/domain';
 import { toast } from 'react-toastify';
@@ -26,6 +27,7 @@ import {
   Loader2,
   Cpu,
   RotateCcw,
+  Wrench,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -39,6 +41,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
   const [selectedFinding, setSelectedFinding] = useState<Finding | null>(null);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [fixTargets, setFixTargets] = useState<Finding[] | null>(null);
 
   // Filters
   const [severityFilter, setSeverityFilter] = useState<string>('all');
@@ -94,7 +97,8 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
 
     const interval = setInterval(() => {
       const currentStatus = reviewRef.current?.status;
-      if (currentStatus && currentStatus !== 'completed' && currentStatus !== 'failed') {
+      const pipelineActive = currentStatus && currentStatus !== 'completed' && currentStatus !== 'failed';
+      if (pipelineActive || reviewRef.current?.fixGeneration?.status === 'running') {
         fetchReviewData();
       }
     }, 600);
@@ -122,6 +126,29 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
     }
     return true;
   });
+
+  const isFixable = (f: Finding) => !!f.fix && f.status !== 'fixed' && f.status !== 'false_positive';
+  const fixableFindings = filteredFindings.filter(isFixable);
+
+  const fixGen = review?.fixGeneration;
+  const unfixedCount = findings.filter((f) => !f.fix && f.status !== 'fixed' && f.status !== 'false_positive').length;
+
+  async function retryFixGeneration() {
+    const res = await fetch(`/api/reviews/${reviewId}/generate-fixes`, { method: 'POST' });
+    if (res.ok) {
+      toast.info('Generating fixes in the background…');
+      fetchReviewData();
+    } else {
+      const data = await res.json().catch(() => ({}));
+      toast.error(data.error || 'Could not start fix generation');
+    }
+  }
+
+  const handleFixesApplied = (appliedIds: string[]) => {
+    setFindings((prev) => prev.map((f) => (appliedIds.includes(f.id) ? { ...f, status: 'fixed' } : f)));
+    setSelectedFinding((sel) => (sel && appliedIds.includes(sel.id) ? { ...sel, status: 'fixed' } : sel));
+    toast.success(`${appliedIds.length} fix${appliedIds.length === 1 ? '' : 'es'} applied to your working tree`);
+  };
 
   // Pagination calculations
   const totalPages = Math.max(1, Math.ceil(filteredFindings.length / itemsPerPage));
@@ -331,6 +358,17 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
             {/* Filter controls */}
             <div className="flex flex-wrap items-center gap-3">
               {review && (
+                <button
+                  disabled={fixableFindings.length === 0}
+                  onClick={() => setFixTargets(fixableFindings)}
+                  title={fixableFindings.length === 0 ? 'No automated fixes available for the current filter' : 'Apply every available fix in the current list'}
+                  className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-emerald-600/20 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                >
+                  <Wrench className="h-4 w-4" />
+                  Apply all fixes ({fixableFindings.length})
+                </button>
+              )}
+              {review && (
                 <ExportDropdown
                   findings={filteredFindings}
                   repoName={review.repositorySource}
@@ -367,6 +405,28 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
               />
             </div>
           </div>
+
+          {review?.status === 'completed' && fixGen?.status === 'running' && (
+            <div className="flex items-center gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs text-emerald-200">
+              <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+              <span>
+                Generating fixes in the background — {fixGen.done}/{fixGen.total} findings processed, {fixGen.generated} fixes ready. You can apply the ready ones now.
+              </span>
+            </div>
+          )}
+          {review?.status === 'completed' && fixGen?.status === 'done' && unfixedCount > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-xs text-slate-300">
+              <span>
+                {unfixedCount} of {findings.length} findings have no automated fix — they need a manual change, or the model couldn&apos;t produce a safe one.
+              </span>
+              <button
+                onClick={retryFixGeneration}
+                className="rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-1.5 font-bold text-slate-200 hover:bg-slate-700 cursor-pointer"
+              >
+                Retry generating fixes
+              </button>
+            </div>
+          )}
 
           {/* Active Pipeline Loading State vs Completed Findings Table */}
           {isPipelineActive && filteredFindings.length === 0 ? (
@@ -489,7 +549,18 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
                             {f.status}
                           </span>
                         </td>
-                        <td className="py-4 px-4 text-right">
+                        <td className="py-4 px-4 text-right space-x-2 whitespace-nowrap">
+                          {isFixable(f) && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setFixTargets([f]);
+                              }}
+                              className="rounded-xl bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 px-3.5 py-1.5 text-xs font-bold hover:bg-emerald-600 hover:text-white transition-colors shadow-md cursor-pointer"
+                            >
+                              Fix
+                            </button>
+                          )}
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -576,7 +647,19 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
         reviewId={reviewId}
         onClose={() => setSelectedFinding(null)}
         onStatusChange={handleStatusChange}
+        onRequestFix={(f) => setFixTargets([f])}
       />
+
+      {fixTargets && review && (
+        <ApplyFixesModal
+          reviewId={reviewId}
+          provider={review.provider}
+          repositorySource={review.repositorySource}
+          findings={fixTargets}
+          onClose={() => setFixTargets(null)}
+          onApplied={handleFixesApplied}
+        />
+      )}
 
       <ChatPanel reviewId={reviewId} />
     </div>

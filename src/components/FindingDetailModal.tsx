@@ -1,7 +1,7 @@
 'use client';
 
 import { Finding } from '@/types/domain';
-import { AlertTriangle, ShieldCheck, FileCode, Check, ShieldAlert, Sparkles, Terminal, Copy, X } from 'lucide-react';
+import { AlertTriangle, ShieldCheck, FileCode, Check, ShieldAlert, Sparkles, Terminal, Copy, X, Wrench } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 export function FindingDetailModal({
@@ -9,11 +9,13 @@ export function FindingDetailModal({
   reviewId,
   onClose,
   onStatusChange,
+  onRequestFix,
 }: {
   finding: Finding | null;
   reviewId: string;
   onClose: () => void;
   onStatusChange: (findingId: string, newStatus: Finding['status']) => void;
+  onRequestFix?: (finding: Finding) => void;
 }) {
   const [updating, setUpdating] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -195,6 +197,15 @@ export function FindingDetailModal({
             <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 font-mono text-xs text-emerald-300 shadow-inner">
               {finding.recommended_fix}
             </div>
+            {finding.fix && finding.status !== 'fixed' && onRequestFix && (
+              <button
+                onClick={() => onRequestFix(finding)}
+                className="mt-3 flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-emerald-600/20 hover:from-emerald-500 hover:to-teal-500 cursor-pointer"
+              >
+                <Wrench className="h-4 w-4" />
+                Preview &amp; apply fix
+              </button>
+            )}
           </div>
         </div>
 

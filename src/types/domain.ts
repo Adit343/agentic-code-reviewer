@@ -10,6 +10,13 @@ export interface VerificationDetails {
   tools: string[];
 }
 
+/** Exact-text replacement that fixes a finding. old_text must occur exactly once in the file. */
+export interface FindingFix {
+  old_text: string;
+  new_text: string;
+  note?: string;
+}
+
 export interface Finding {
   id: string;
   category: FindingCategory;
@@ -28,6 +35,7 @@ export interface Finding {
   attack_scenario?: string;
   recommended_fix: string;
   suggested_patch?: string;
+  fix?: FindingFix;
   verification: VerificationDetails;
 }
 
@@ -93,6 +101,8 @@ export interface Review {
   updatedAt: string;
   completedAt?: string;
   error?: string;
+  /** Fix generation runs in the background after the review completes. */
+  fixGeneration?: { status: 'running' | 'done'; total: number; done: number; generated: number };
 }
 
 export interface CodeSymbol {
@@ -170,6 +180,7 @@ export const FindingZodSchema = z.object({
   attack_scenario: z.string().optional(),
   recommended_fix: z.string(),
   suggested_patch: z.string().optional(),
+  fix: z.object({ old_text: z.string(), new_text: z.string(), note: z.string().optional() }).optional(),
   verification: z.object({
     checks_performed: z.array(z.string()),
     counter_evidence_considered: z.array(z.string()),
